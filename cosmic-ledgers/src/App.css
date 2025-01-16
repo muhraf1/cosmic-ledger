@@ -11,6 +11,15 @@
   will-change: filter;
   transition: filter 300ms;
 }
+.glass {
+  background: linear-gradient(to bottom right, #0B021F, #BA84F4)/40;
+  border-radius: 10px;
+  border: 2px solid #BA84F4; 
+}
+.test{
+  color: #B470D8;
+}
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
