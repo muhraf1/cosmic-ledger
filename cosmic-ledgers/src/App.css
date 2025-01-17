@@ -12,9 +12,22 @@
   transition: filter 300ms;
 }
 .glass {
-  background: linear-gradient(to bottom right, #0B021F, #BA84F4)/40;
+  background: linear-gradient(to bottom right, rgba(11, 2, 31, 0.4), rgba(186, 132, 244, 0.4));
+  border-radius: 10px;
+  border: 1px solid rgba(186, 132, 244, 0.1);
+  backdrop-filter: blur(20px);
+}
+
+.glasslayer2{
+  background: linear-gradient(to bottom right , #81638A, #E0ADF0);
   border-radius: 10px;
   border: 2px solid #BA84F4; 
+  
+}
+
+
+.custom-width {
+  width: 580px;
 }
 .test{
   color: #B470D8;
