@@ -223,7 +223,7 @@ const Content = () => {
         </div>
       </CardHeader>
       <CardContent className="px-2 pt-2  border-none  bg-transparent">
-        <ChartContainer config={chartConfig} className="aspect-auto h-[150px] w-full  bg-transparent">
+        <ChartContainer config={chartConfig} className="aspect-auto h-[120px] w-full  bg-transparent">
           <AreaChart data={filteredData}>
             <defs>
               <linearGradient id="fillDesktop" x1="0" y1="0" x2="0" y2="1">

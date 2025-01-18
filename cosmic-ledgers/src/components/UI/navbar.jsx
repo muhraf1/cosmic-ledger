@@ -26,15 +26,15 @@ const Navbar = () => {
             case "NFT":
                 return (
                     <div>
-                        <VmMenu />
-                 
+                     
+                    <h1> NFT</h1>
                     </div>
 
                 );
                  case "Transaction":
                     return (
                         <div>
-                            <VmMenu />
+                            <h1> transaction</h1>
                 
                         </div>
     
@@ -42,7 +42,7 @@ const Navbar = () => {
             case "Fusion":
                 return (
                     <div>
-                        <VmMenu />
+                        <h1> fusion</h1>
                       
                     </div>
 
@@ -78,7 +78,7 @@ const Navbar = () => {
             </div>
 
             {/* Section Content */}
-            <div className="px-4 mt-2 flex-grow overflow-y-auto max-h-[200px]">  {/* Add max height and make scrollable */}
+            <div className="px-4 mt-2 flex-grow overflow-y-auto ">  {/* Add max height and make scrollable */}
                 <div className="mb-6">
                     {/* Dynamic Section Content */}
                     <div className="mt-2">
