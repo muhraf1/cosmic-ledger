@@ -3,6 +3,15 @@
     import { Input } from "@/components/ui/input";
     import GridSwitch from "./GridSwitch";
 
+    import {
+        Dialog,
+        DialogContent,
+        DialogDescription,
+        DialogHeader,
+        DialogTitle,
+        DialogTrigger,
+      } from "@/components/ui/dialog";
+
 
     import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "./table"; // Assuming you're using a UI component library like Radix UI for tables
     import {
@@ -66,19 +75,38 @@
 
         const renderNftCards = (data) => (
             <div className="grid grid-cols-2 gap-4 mt-4">
-                {data.map((nft, index) => (
-                    <div key={index} className="  text-left rounded-lg bg-[#D9D9D9]/5 border border-white/10 bottom-2">
-                        <img src={nft.nftimage} alt={nft.nftname} className="w-full h-fit object-cover mb-2" />
-                        <div className="px-2 py-2">
-                            <div className="text-sm font-bold text-white">{nft.nftname}</div>
-                            <div className="text-xs font-medium text-white/70">{nft.authorname}</div>
-                            <div className="text-sm font-semibold text-white">{nft.amount}</div>
-                            <img src={nft.chainlogo} alt="chain logo" className="w-6 h-6 mt-2 mb-2 float-right" />
-                        </div>
+              {data.map((nft, index) => (
+                <Dialog key={index}>
+                  <DialogTrigger asChild>
+                    <div className="text-left rounded-lg bg-[#D9D9D9]/5 border border-white/10 bottom-2 cursor-pointer">
+                      <img src={nft.nftimage} alt={nft.nftname} className="w-full h-fit object-cover mb-2" />
+                      <div className="px-2 py-2">
+                        <div className="text-sm font-bold text-white">{nft.nftname}</div>
+                        <div className="text-xs font-medium text-white/70">{nft.authorname}</div>
+                        <div className="text-sm font-semibold text-white">{nft.amount}</div>
+                        <img src={nft.chainlogo} alt="chain logo" className="w-6 h-6 mt-2 mb-2 float-right" />
+                      </div>
                     </div>
-                ))}
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-fit h-auto">
+                    <DialogHeader className="flex flex-col items-center">
+                      <DialogTitle>{nft.nftname}</DialogTitle>
+                      <DialogDescription className="text-center">
+                        <p>{nft.authorname}</p>
+                        <p>{nft.amount}</p>
+                        <img 
+                          src={nft.nftimage} 
+                          alt={nft.nftname} 
+                          className="w-full object-cover mt-2" 
+                          style={{ maxHeight: '70vh' }}  // Limit to 70% of viewport height to prevent overly large modals
+                        />
+                      </DialogDescription>
+                    </DialogHeader>
+                  </DialogContent>
+                </Dialog>
+              ))}
             </div>
-        );
+          );
 
         const renderSectionContent = () => {
             const data = chainData[activeSection] || [];

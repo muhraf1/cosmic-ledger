@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import VmMenu from "./vmmenu";
 import NftMenu from "./nftmenu";
-
+import TransactionMenu from "./transactionmenu";
 const Navbar = () => {
     const [activeSection, setActiveSection] = useState("Portfolio");
 
@@ -35,8 +35,7 @@ const Navbar = () => {
                  case "Transaction":
                     return (
                         <div>
-                            <h1> transaction</h1>
-                
+                           <TransactionMenu></TransactionMenu>
                         </div>
     
                     );
