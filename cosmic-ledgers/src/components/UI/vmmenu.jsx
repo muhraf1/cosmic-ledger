@@ -33,7 +33,7 @@ const VmMenu = () => {
     };
 
     const protocolData = {
-        "All": [
+        "All": [    
             {
                 protocollogo: "./src/assets/wallet_logo.png", protocolname: "Wallet", amount: "$5,000", token: [
                     { ticker: "Sup", tickerlogo: "./src/assets/supra_logo.png", price: "$1", Amount: "2500", USDvalue: "$1500" },
@@ -85,7 +85,7 @@ const VmMenu = () => {
             {
                 protocollogo: "./src/assets/wallet_logo.png", protocolname: "Wallet", amount: "$2,000", token: [
                     { ticker: "WIF", tickerlogo: "./src/assets/wif_logo.png", price: "$1", Amount: "200", USDvalue: "$200" },
-                    { ticker: "SOL", tickerlogo: "./src/assets/sol_logo.png", price: "$190", Amount: "5,26", USDvalue: "$1000" },
+                    { ticker: "SOL", tickerlogo: "./src/assets/solana_logo.png", price: "$190", Amount: "5,26", USDvalue: "$1000" },
 
                 ]
             },
@@ -194,7 +194,7 @@ const VmMenu = () => {
 
                                     <Table className="bg-[#3A2048] rounded-[5px]">
                                         <TableHeader className="text-white bg-[#5A3D6A] ">
-                                            <TableRow className="border-transparent rounded-lg">
+                                            <TableRow className="border-transparent rounded-lg text-xs">
                                                 {protocol.protocolname !== "Wallet" ? (
                                                     <>
                                                         <TableHead className="w-[100px] text-white p-2 rounded-l-[5px]">Pool</TableHead>

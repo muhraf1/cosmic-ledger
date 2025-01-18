@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import VmMenu from "./vmmenu";
+import NftMenu from "./nftmenu";
 
 const Navbar = () => {
     const [activeSection, setActiveSection] = useState("Portfolio");
@@ -27,7 +28,7 @@ const Navbar = () => {
                 return (
                     <div>
                      
-                    <h1> NFT</h1>
+                  <NftMenu></NftMenu>
                     </div>
 
                 );
