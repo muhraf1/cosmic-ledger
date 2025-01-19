@@ -54,6 +54,18 @@ const TransactionMenu = () => {
                 type: "sent",
                 chainname: "Ethereum",
                 chainlogo: "./src/assets/eth_logo.png",
+                tokenlogo: "./src/assets/eth_logo.png",
+                amounttoken: "-0.00497683",
+                amountusd: "-$14.67",
+                currentprice: "1 ETH = $2,800"
+            },
+            {
+                date: "2025-01-05",
+                typeicon: "./src/assets/sent_icon.png",
+                type: "sent",
+                chainname: "Ethereum",
+                chainlogo: "./src/assets/eth_logo.png",
+                tokenlogo: "./src/assets/eth_logo.png",
                 amounttoken: "-0.00497683",
                 amountusd: "-$14.67",
                 currentprice: "1 ETH = $2,800"
@@ -64,6 +76,7 @@ const TransactionMenu = () => {
                 type: "receive",
                 chainname: "Ethereum",
                 chainlogo: "./src/assets/eth_logo.png",
+                tokenlogo: "./src/assets/eth_logo.png",
                 amounttoken: "+1",
                 amountusd: "$2,800",
                 currentprice: "1 ETH = $2,800"
@@ -74,6 +87,7 @@ const TransactionMenu = () => {
                 type: "mint",
                 chainname: "Solana",
                 chainlogo: "./src/assets/solana_logo.png",
+                tokenlogo: "./src/assets/madslads_nft.png",
                 amounttoken: "1",
                 amountusd: "$180",
                 currentprice: "1 SOL = $180"
@@ -83,7 +97,8 @@ const TransactionMenu = () => {
                 typeicon: "./src/assets/swap_icon.png",
                 type: "swap",
                 chainname: "Binance Smart Chain",
-                chainlogo: "./src/assets/bsc_logo.png",
+                chainlogo: "./src/assets/bnb_logo.png",
+                tokenlogo: "./src/assets/bnb_logo.png",
                 amounttoken: "+0.5",
                 amountusd: "$1,000",
                 currentprice: "1 BNB = $2,000"
@@ -92,10 +107,11 @@ const TransactionMenu = () => {
         "EVM": [
             {
                 date: "2025-01-05",
-                typeicon: "./src/assets/sent_icon.png",
-                type: "sent",
+                typeicon: "./src/assets/mint_icon.png",
+                type: "mint",
                 chainname: "Ethereum",
                 chainlogo: "./src/assets/eth_logo.png",
+                tokenlogo: "./src/assets/pudgy_nft.png",
                 amounttoken: "-0.003",
                 amountusd: "-$8.40",
                 currentprice: "1 ETH = $2,800"
@@ -105,7 +121,8 @@ const TransactionMenu = () => {
                 typeicon: "./src/assets/receive_icon.png",
                 type: "receive",
                 chainname: "Polygon",
-                chainlogo: "./src/assets/polygon_logo.png",
+                chainlogo: "./src/assets/polygon_logo.svg",
+                tokenlogo: "./src/assets/polygon_logo.svg",
                 amounttoken: "+100",
                 amountusd: "$200",
                 currentprice: "1 MATIC = $2"
@@ -118,6 +135,7 @@ const TransactionMenu = () => {
                 type: "mint",
                 chainname: "Solana",
                 chainlogo: "./src/assets/solana_logo.png",
+                tokenlogo: "./src/assets/madslads_nft.png",
                 amounttoken: "2",
                 amountusd: "$360",
                 currentprice: "1 SOL = $180"
@@ -128,22 +146,86 @@ const TransactionMenu = () => {
                 date: "2025-01-08",
                 typeicon: "./src/assets/swap_icon.png",
                 type: "swap",
-                chainname: "Aptos",
-                chainlogo: "./src/assets/aptos_logo.png",
+                chainname: "Sui",
+                chainlogo: "./src/assets/sui_logo.png",
+                tokenlogo: "./src/assets/sui_logo.png",
                 amounttoken: "+50",
                 amountusd: "$250",
-                currentprice: "1 APT = $5"
+                currentprice: "1 sui = $5"
             }
         ]
     };
     
-    const renderTransactionCards = (data) => (
-        <div className="grid grid-cols-2 gap-4 mt-4">
-
-
-
-    </div>
-  );
+    const renderTransactionCards = (transactionList) => (
+        <div className="grid grid-cols-1 gap-4 mt-4">
+            {transactionList.map((tx, index) => {
+                // Group transactions by date
+                if (index === 0 || tx.date !== transactionList[index - 1].date) {
+                    // Parse the date string into a Date object
+                const dateObj = new Date(tx.date);
+                const day = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+                const monthDay = dateObj.getDate();
+                const year = dateObj.getFullYear();
+                
+                // Format the date
+                const formattedDate = `${day} ${monthDay}, ${year}`;
+                    return (
+                        <div key={tx.date} className="flex flex-col p-4">
+                            <div className="flex text-white text-sm font-semibold mb-2">
+                            {formattedDate}
+                            </div>
+                            <div>
+                                <Table className="bg-[#3A2048] rounded-[5px]">
+                                    <TableHeader className="text-white bg-[#5A3D6A]">
+                                        <TableRow className="border-transparent rounded-lg text-xs">
+                                            <TableHead className="w-[100px] text-white p-2 rounded-l-[5px]">Type</TableHead>
+                                            <TableHead className="text-white">Assets</TableHead>                                      
+                                            <TableHead className="text-white text-right rounded-r-[5px]">P/L</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody className="text-white font-semibold border-none">
+                                        {transactionList.filter(transaction => transaction.date === tx.date).map((transaction, tIndex) => (
+                                            <TableRow key={tIndex} className="border-none">
+                                                <TableCell className="font-medium text-xs">
+                                                <div className="flex items-center relative">
+                                                    <div className="relative mr-2">
+                                                        <img src={transaction.typeicon} className="h-8 w-8" alt="type icon" />
+                                                        <img src={transaction.chainlogo} className="h-4 w-4 absolute bottom-0 right-0" alt="chain logo" />
+                                                    </div>
+                                                    <span className="text-xs">{transaction.type}</span>
+                                                </div>
+                                                </TableCell>
+                                                <TableCell className="text-xs text-left ">
+                                                    <div className="flex justify-start ">
+                                                        <img src={transaction.tokenlogo} className="h-6 w-6 " alt="token logo" />
+                                                        <div className="flex flex-col ml-2">
+                                                            <span className="font-bold text-white text-sm">{transaction.amounttoken}</span>
+                                                            <div className="flex flex-row text-xs">
+                                                                <span className="font-medium text-white/80">{transaction.amountusd}</span>
+                                                                <span className="font-light text-white/60">{transaction.currentprice}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-right text-xs">
+                                                    {/* Here you would typically calculate P&L, but since current price isn't dynamically updated, we'll just show the amount in USD */}
+                                                    <div className="flex flex-col text-right">
+                                                        <span>{transaction.amountusd}</span>
+                                                        {/* P&L calculation would go here if real-time data were available */}
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </div>
+                    );
+                }
+                return null; // This line ensures we don't render duplicate date headers
+            })}
+        </div>
+    );
    
 
     const renderSectionContent = () => {
