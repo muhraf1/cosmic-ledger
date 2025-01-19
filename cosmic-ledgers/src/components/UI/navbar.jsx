@@ -1,8 +1,15 @@
 import React, { useState } from "react";
 import VmMenu from "./vmmenu";
 import NftMenu from "./nftmenu";
+
 import TransactionMenu from "./transactionmenu";
+import FusionMenus from "./fusionmenu";
+import { useWalletContext } from "./WalletContext";
+
 const Navbar = () => {
+ 
+      const { wallets, addWallet, removeWallet } = useWalletContext();
+
     const [activeSection, setActiveSection] = useState("Portfolio");
 
 
@@ -42,8 +49,7 @@ const Navbar = () => {
             case "Fusion":
                 return (
                     <div>
-                        <h1> fusion</h1>
-                      
+ <FusionMenus addWallet={addWallet} removeWallet={removeWallet} wallets={wallets} />                   
                     </div>
 
                 );
