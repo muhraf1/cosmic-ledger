@@ -1,10 +1,86 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Separator } from "./separator";
+import { useQuery, gql } from '@apollo/client'; // Assuming Apollo Client is set up in your project
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "./table"; // Assuming you're using a UI component library like Radix UI for tables
+import WalletProvider, { useWalletContext } from "./WalletContext";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./dialog";
+// Define the GraphQL query for fetching wallet holdings
+const GET_WALLET_HOLDINGS = gql`
+ query WalletHoldings($address: String!) {
+  walletHoldings(address: $address) {
+    owner
+    cmc_id
+    cg_id
+    cmc_slug
+    name
+    symbol
+    logo
+    amount
+    amountRaw
+    balance
+    contractAddress
+    contractDecimals
+    rate
+    price {
+      price
+      symbol
+      decimal
+      source
+    }
+    last_24h_price {
+      symbol
+      price
+      timestamp
+      confidence
+      source
+    }
+    avgCost
+    last_transferred_at
+    positionId
+    category
+    sector
+    rank
+    positionType
+    chain
+    is_spam
+  }
+}
+`;
+
+
+
 
 const VmMenu = () => {
     const [activeSection, setActiveSection] = useState("All");
+    const { wallets, selectedWalletAddress } = useWalletContext();
+    const [allHoldings, setAllHoldings] = useState([]);
+    useEffect(() => {
+        if (selectedWalletAddress === null) { // 'All Wallet' is selected
+          const fetchAllHoldings = async () => {
+            const allHoldings = [];
+            for (const wallet of wallets) {
+              const { data } = await useQuery(GET_WALLET_HOLDINGS, { variables: { address: wallet.address } });
+              if (data?.walletHoldings) {
+                allHoldings.push(...data.walletHoldings);
+              }
+            }
+            setAllHoldings(allHoldings);
+          };
+          fetchAllHoldings();
+        }
+      }, [selectedWalletAddress, wallets]);
+  
+  
+    const address = selectedWalletAddress; // Use the selected wallet's address
+    console.log('Address used for query:', address);
+  
 
+    const { loading, error, data } = useQuery(GET_WALLET_HOLDINGS, {
+        variables: { address: address },
+        skip: !address // Skip the query if no address is provided
+    });
+
+    console.log("fetcing data", data);
     // Sections array
     const sections = [
         "All",
@@ -12,6 +88,40 @@ const VmMenu = () => {
         "SVM",
         "Move"
     ];
+
+
+    // Helper function to categorize holdings by chain
+    const categorizeHoldings = (holdings) => {
+        return holdings.reduce((acc, holding) => {
+            const chain = holding.chain || 'Unknown'; // Fallback if chain is not provided
+            if (!acc[chain]) acc[chain] = [];
+            acc[chain].push(holding);
+            return acc;
+        }, { All: holdings });
+    };
+
+
+    const calculateTotalBalance = (holdings) => {
+        let total = 0;
+        // Assuming 'holdings' is directly the array of holding objects for an address
+        holdings.forEach(holding => {
+            // Convert the amount to a number and multiply by price
+            const amount = parseFloat(holding.amountRaw) * holding.price.price;
+            if (!isNaN(amount)) {
+                total += amount;
+            }
+        });
+        return total;
+    };
+
+    const totalBalance = calculateTotalBalance(data?.walletHoldings || []);
+    // Use effect to process data when it changes
+    useEffect(() => {
+        if (!loading && data && data.walletHoldings) {
+            const categorizedHoldings = categorizeHoldings(data.walletHoldings);
+            // Here you might want to do something with categorizedHoldings, like setting state for rendering
+        }
+    }, [loading, data]);
     // Dummy data for chain information
     const chainData = {
         "All": [
@@ -33,7 +143,7 @@ const VmMenu = () => {
     };
 
     const protocolData = {
-        "All": [    
+        "All": [
             {
                 protocollogo: "./src/assets/wallet_logo.png", protocolname: "Wallet", amount: "$5,000", token: [
                     { ticker: "Sup", tickerlogo: "./src/assets/supra_logo.png", price: "$1", Amount: "2500", USDvalue: "$1500" },
@@ -106,8 +216,14 @@ const VmMenu = () => {
     };
 
     const renderSectionContent = () => {
-        const data = chainData[activeSection] || [];
-        const dataprotocol = protocolData[activeSection] || [];
+        if (loading) return <p>Loading...</p>;
+        if (error) return <p>Error: {error.message}</p>;
+        // const data = chainData[activeSection] || [];
+        // const dataprotocol = protocolData[activeSection] || [];
+        const holdings = data?.walletHoldings || [];
+        const sectionHoldings = holdings.filter(holding =>
+            activeSection === "All" || holding.chain === activeSection
+        );
 
         switch (activeSection) {
             case "All":
@@ -118,31 +234,30 @@ const VmMenu = () => {
                     // column
                     <div className="flex flex-col">
                         {/* section chain */}
-                        <div className="flex flex-row space-x-4">
-                            {data.map((chain, index) => (
+                        {/* <div className="flex flex-row space-x-4">
+                            {sectionHoldings.map((holding, index) => (
                                 <div key={index} className="flex flex-row p-4">
                                     <div className="flex space-x-1 w-full ">
                                         <img
-                                            src={chain.chainlogo}
-                                            alt={chain.chainname}
+                                            src={holding.logo}
+                                            alt={holding.name}
                                             className="h-8 w-8 mr-2"
                                         />
                                         <div className="flex flex-col">
-                                            <span className="font-medium text-white/60 text-sm text-left">{chain.chainname}</span>
+                                            <span className="font-medium text-white/60 text-sm text-left">{holding.name}</span>
                                             <div className="flex flex-row justify-center items-center">
-                                                <span className="font-bold text-white text-sm">{chain.amount}</span>
-                                                <span className="font-medium text-white/60 text-xs ml-2">{chain.percentage}</span>
+                                                <span className="font-bold text-white text-sm">{`$${holding.balance}`}</span>
+                                                <span className="font-medium text-white/60 text-xs ml-2">{`${((holding.balance / totalBalance) * 100).toFixed(2)}%`}</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             ))}
 
-                        </div>
+                        </div> */}
                         {/* section protocol & wallet  */}
 
-
-                        <div className="flex flex-row space-x-2 ml-4 ">
+                        {/* <div className="flex flex-row space-x-2 ml-4 ">
                             {dataprotocol.map((protocol, index) => (
                                 <div key={index} className="flex flex-row ">
                                     <div className="flex flex-row w-full bg-[#4B2D68] p-2 rounded-[3px] ">
@@ -160,80 +275,70 @@ const VmMenu = () => {
                                     </div>
                                 </div>
                             ))}
-                        </div>
+                        </div> */}
 
                         {/* detailed protocol */}
                         <Separator className="mt-3 bg-white/10"></Separator>
 
 
-                        {/* Protocol Cards */}
+                        {/* Token  Tables */}
                         <div className="flex flex-col space-y-2">
-                            {dataprotocol.map((protocol, index) => (
-                                <div key={protocol.protocolname} className=" rounded-md p-4">
-                                    {/* Protocol Header */}
-                                    <div className="flex justify-between mb-2">
-                                        <div className="flex items-center">
-                                            <img src={protocol.protocollogo} alt={protocol.protocolname} className="h-6 w-6 mr-2" />
-                                            <span className="font-medium text-white">{protocol.protocolname}</span>
-                                        </div>
-                                        <span className="font-bold text-white">{protocol.amount}</span>
-                                    </div>
-
-                                  
-
-                                    {/* Protocol Body - Token Table */}
-                                    <div className="bg-[#3A2048] p-4 rounded-lg">
-                                    {protocol.protocolname !== "Wallet" && (
-                                        <button 
-                                            className="text-white bg-[#8C4FAD] rounded-md  p-1 my-1 text-xs flex mb-2   justify-center  w-1/3"
-                                            onClick={() => {/* Add your click handler here */}}
-                                        >
-                                            Liquidity Pool
-                                        </button>
-                                    )}
-
-                                    <Table className="bg-[#3A2048] rounded-[5px]">
-                                        <TableHeader className="text-white bg-[#5A3D6A] ">
-                                            <TableRow className="border-transparent rounded-lg text-xs">
-                                                {protocol.protocolname !== "Wallet" ? (
-                                                    <>
-                                                        <TableHead className="w-[100px] text-white p-2 rounded-l-[5px]">Pool</TableHead>
-                                                        <TableHead className=" text-white">Balance</TableHead>
-                                                        <TableHead className=" text-white">Rewards</TableHead>
-                                                        <TableHead className=" text-white text-right rounded-r-[5px]">USD Value</TableHead>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <TableHead className=" text-white w-[120px] p-2 rounded-l-[5px]">Token</TableHead>
-                                                        <TableHead className=" text-white">Price</TableHead>
-                                                        <TableHead className=" text-white">Amount</TableHead>
-                                                        <TableHead className= "text-white text-right rounded-r-[5px]">USD Value</TableHead>
-                                                    </>
-                                                )}
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody className="text-white font-semibold border-none">
-                                            {protocol.token.map((token) => (
-                                                <TableRow className="border-none " key={token.ticker}>
-                                                    <TableCell className="font-medium  text-xs">
+                            <Table className="bg-[#3A2048] rounded-[5px]">
+                                <TableHeader className="text-white bg-[#5A3D6A] ">
+                                    <TableRow className="border-transparent rounded-lg text-xs">
+                                        <TableHead className="w-[100px] text-white p-2 rounded-l-[5px]">Token</TableHead>
+                                        <TableHead className=" text-white">Price</TableHead>
+                                        <TableHead className=" text-white">Amount</TableHead>
+                                        <TableHead className=" text-white text-right rounded-r-[5px]">USD Value</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody className="text-white font-semibold border-none">
+                                    {sectionHoldings.map(holding => (
+                                        <Dialog key={holding.name}>
+                                            <DialogTrigger asChild>
+                                                <TableRow className="border-none cursor-pointer hover:bg-[#5A3D6A]">
+                                                    <TableCell className="font-medium text-xs">
                                                         <div className="flex items-center">
-                                                            <img src={token.tickerlogo} alt={token.ticker} className="h-6 w-6 mr-2" />
-                                                           <span className="text-xs"> { token.ticker}</span>
+                                                            <img src={holding.logo} alt={holding.symbol} className="h-6 w-6 mr-2" />
+                                                            <span className="text-xs">{holding.symbol}</span>
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell className=" text-xs">{token.price}</TableCell>
-                                                    <TableCell className=" text-xs">{token.Amount}</TableCell>
-                                                    <TableCell className="text-right  text-xs">{token.USDvalue}</TableCell>
+                                                    <TableCell className="text-xs">
+                                                        {`$${holding.price.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                                    </TableCell>
+                                                    <TableCell className="text-xs">
+                                                        {holding.amount.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                                                    </TableCell>
+                                                    <TableCell className="text-right text-xs">
+                                                        {`$${(
+                                                            parseFloat(holding.amount) * holding.price.price
+                                                        ).toLocaleString(undefined, {
+                                                            minimumFractionDigits: 1,
+                                                            maximumFractionDigits: 1
+                                                        })}`}
+                                                    </TableCell>
                                                 </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </div>
-                                </div>
-                            ))}
+                                            </DialogTrigger>
+                                            <DialogContent className="sm:max-w-[425px]">
+                                                <DialogHeader>
+                                                    <DialogTitle>{holding.name}</DialogTitle>
+                                                    <DialogDescription>
+                                                        {}
+                                                        Symbol: {holding.symbol}<br />
+                                                        Price: ${holding.price.price}<br />
+                                                        Amount: {holding.amount}<br />
+                                                        USD Value: ${holding.balance}
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                            </DialogContent>
+                                        </Dialog>
+                                    ))}
+                                </TableBody>
+                            </Table>
                         </div>
+
                     </div>
-                
+
                 );
             default:
                 return null;

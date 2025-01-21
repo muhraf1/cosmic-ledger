@@ -1,16 +1,17 @@
+// walletselect.jsx
+
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useWalletContext } from "./WalletContext";
 
-
 const WalletSelect = () => {
-  const { wallets } = useWalletContext();
+  const { wallets, selectWallet } = useWalletContext();
 
   return (
     <div className="w-full flex justify-between p-2 py-4 pt-6">
       <div className="w-full">
-        <Select>
+        <Select onValueChange={selectWallet}>
           <SelectTrigger className="w-[300px] bg-white text-[#B470D8]">
             <SelectValue placeholder="Select a Wallet" />
           </SelectTrigger>

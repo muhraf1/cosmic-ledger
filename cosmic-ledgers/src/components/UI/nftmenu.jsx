@@ -1,33 +1,107 @@
-    import React, { useState } from "react";
-    import { Separator } from "./separator";
-    import { Input } from "@/components/ui/input";
-    import GridSwitch from "./GridSwitch";
+import React, { useState, useEffect } from "react";
+import { useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { Separator } from "./separator";
+import { Input } from "@/components/ui/input";
+import GridSwitch from "./GridSwitch";
+import WalletProvider, { useWalletContext } from "./WalletContext";
 
-    import {
-        Dialog,
-        DialogContent,
-        DialogDescription,
-        DialogHeader,
-        DialogTitle,
-        DialogTrigger,
-      } from "@/components/ui/dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "./table";
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Search } from "lucide-react";
 
-
-    import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "./table"; // Assuming you're using a UI component library like Radix UI for tables
-    import {
-        Select,
-        SelectContent,
-        SelectGroup,
-        SelectItem,
-        SelectLabel,
-        SelectTrigger,
-        SelectValue,
-    } from "@/components/ui/select"
-    import { Search } from "lucide-react";
+// GraphQL Query
+const GET_NFT_HOLDINGS = gql`
+ query NftHoldings($address: String!) {
+  nftHoldings(address: $address) {
+    owner
+    nativeToken {
+      name
+      cmcId
+      cmc_slug
+      cgId
+      symbol
+      decimals
+    }
+    collection {
+      description
+      externalUrl
+      id
+      imageUrl
+      name
+      totalItems
+      chain
+      verified
+      scam
+    }
+    collectionId
+    tokens {
+      royalty
+      imageUrl
+      tokenId
+      contractAddress
+      name
+      rarityScore
+      rank
+      price
+      cost
+    }
+    floorPrice
+    marketPrice
+    profit {
+      realizedPnL
+      unrealizedPnL
+    }
+  }
+}
+`;
 
     const NftMenu = () => {
         const [activeSection, setActiveSection] = useState("All");
+        const { wallets, selectedWalletAddress } = useWalletContext();
+        useEffect(() => {
+            if (selectedWalletAddress === null) { // 'All Wallet' is selected
+              const fetchAllHoldings = async () => {
+                const allHoldings = [];
+                for (const wallet of wallets) {
+                  const { data } = await useQuery(GET_NFT_HOLDINGS, { variables: { address: wallet.address } });
+                  if (data?.walletHoldings) {
+                    allHoldings.push(...data.walletHoldings);
+                  }
+                }
+                setAllHoldings(allHoldings);
+              };
+              fetchAllHoldings();
+            }
+          }, [selectedWalletAddress, wallets]);
+      
+      
+        const address = selectedWalletAddress; // Use the selected wallet's address
+        console.log('Address used for query:', address);
 
+        const { loading, error, data } = useQuery(GET_NFT_HOLDINGS, {
+            variables: { address },
+            // You might want to skip this query if the address is not set
+            skip: !address,
+          });
+          console.log("nft data",data);
+        
         // Sections array
         const sections = [
             "All",
@@ -73,40 +147,47 @@
 
         }
 
-        const renderNftCards = (data) => (
-            <div className="grid grid-cols-2 gap-4 mt-4">
-              {data.map((nft, index) => (
-                <Dialog key={index}>
-                  <DialogTrigger asChild>
-                    <div className="text-left rounded-lg bg-[#D9D9D9]/5 border border-white/10 bottom-2 cursor-pointer">
-                      <img src={nft.nftimage} alt={nft.nftname} className="w-full h-fit object-cover mb-2" />
-                      <div className="px-2 py-2">
-                        <div className="text-sm font-bold text-white">{nft.nftname}</div>
-                        <div className="text-xs font-medium text-white/70">{nft.authorname}</div>
-                        <div className="text-sm font-semibold text-white">{nft.amount}</div>
-                        <img src={nft.chainlogo} alt="chain logo" className="w-6 h-6 mt-2 mb-2 float-right" />
-                      </div>
-                    </div>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-fit h-auto">
-                    <DialogHeader className="flex flex-col items-center">
-                      <DialogTitle>{nft.nftname}</DialogTitle>
-                      <DialogDescription className="text-center">
-                        <p>{nft.authorname}</p>
-                        <p>{nft.amount}</p>
-                        <img 
-                          src={nft.nftimage} 
-                          alt={nft.nftname} 
-                          className="w-full object-cover mt-2" 
-                          style={{ maxHeight: '70vh' }}  // Limit to 70% of viewport height to prevent overly large modals
-                        />
-                      </DialogDescription>
-                    </DialogHeader>
-                  </DialogContent>
-                </Dialog>
-              ))}
-            </div>
-          );
+        const renderNftCards = () => {
+            if (loading) return <p>Loading...</p>;
+            if (error) return <p>Error: {error.message}</p>;
+            if (!data || !data.nftHoldings) return <p>No NFT data available</p>;
+        
+            return (
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                {data.nftHoldings.map((holding, index) => (
+                  holding.tokens.map((token, i) => (
+                    <Dialog key={`${index}-${i}`}>
+                      <DialogTrigger asChild>
+                        <div className="text-left rounded-lg bg-[#D9D9D9]/5 border border-white/10 bottom-2 cursor-pointer">
+                          <img src={token.imageUrl} alt={token.name} className="w-full h-fit object-cover mb-2" />
+                          <div className="px-2 py-2">
+                            <div className="text-sm font-bold text-white">{token.name}</div>
+                            <div className="text-xs font-medium text-white/70">{holding.collection.name}</div>
+                            <div className="text-sm font-semibold text-white">{token.amount}</div>
+                          </div>
+                        </div>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-fit h-auto">
+                        <DialogHeader className="flex flex-col items-center">
+                          <DialogTitle>{token.name}</DialogTitle>
+                          <DialogDescription className="text-center">
+                            <p>{holding.collection.name}</p>
+                            <p>{token.amount}</p>
+                            <img 
+                              src={token.imageUrl} 
+                              alt={token.name} 
+                              className="w-full object-cover mt-2" 
+                              style={{ maxHeight: '70vh' }}  
+                            />
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
+                  ))
+                ))}
+              </div>
+            );
+          };
 
         const renderSectionContent = () => {
             const data = chainData[activeSection] || [];
@@ -123,7 +204,7 @@
                         // column
                         <div className="flex flex-col">
                             {/* section chain */}
-                            <div className="flex flex-row space-x-4">
+                            {/* <div className="flex flex-row space-x-4">
                                 {data.map((chain, index) => (
                                     <div key={index} className="flex flex-row p-4">
                                         <div className="flex space-x-1 w-full ">
@@ -143,7 +224,7 @@
                                     </div>
                                 ))}
 
-                            </div>
+                            </div> */}
 
 
                             {/* detailed nft  */}
@@ -220,10 +301,7 @@
                             {/* NFT sections */}
                             {/*  2 grids  1row have 2 nft cards when excced creare new row */}
                     
-                            {renderNftCards(nftList)}
-
-
-
+                            {renderNftCards()}
 
 
                         </div>

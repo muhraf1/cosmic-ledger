@@ -35,7 +35,7 @@ const FusionMenus = ({ wallets, addWallet, removeWallet }) => {
   };
 
   return (
-    <div className="flex flex-col overflow-y-auto max-h-[180px] relative">
+    <div className="flex flex-col overflow-y-auto min-h-[18 0px] max-h-[180px] relative">
       {/* Display Existing Wallets */}
       <div className="flex flex-col gap-2 mx-10 px-4">
         {wallets.map((wallet, index) => (
@@ -99,7 +99,6 @@ const FusionMenus = ({ wallets, addWallet, removeWallet }) => {
                         { value: 'ethereum', label: 'Ethereum', img: './src/assets/eth_logo.png' },
                         { value: 'sui', label: 'Sui', img: './src/assets/sui_logo.png' },
                         { value: 'solana', label: 'Solana', img: './src/assets/solana_logo.png' },
-                        { value: 'aptos', label: 'Aptos', img: './src/assets/aptos_logo.svg' },
                       ].map((item) => (
                         <SelectItem key={item.value} value={item.value}>
                           <div className="flex items-center">

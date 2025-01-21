@@ -2,7 +2,7 @@ import React from "react";
 import WalletSelect from "./walletselect";
 import Content from "./contentchart";
 import Navbar from "./navbar";
-import { WalletProvider, useWalletContext } from "./WalletContext";
+import WalletProvider, { useWalletContext } from "./WalletContext";
 
 const BaseLayer = ({ children }) => {
   return (
@@ -16,7 +16,6 @@ const BaseLayer = ({ children }) => {
             <img className="h-8 w-auto" src="./src/assets/name_logo.png" />
           </div>
         </div>
-
       </div>
     </WalletProvider>
   );
