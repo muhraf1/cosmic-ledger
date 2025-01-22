@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import VmMenu from "./vmmenu";
 import NftMenu from "./nftmenu";
+import AddressDetails from "./suprascraper";
 
 import TransactionMenu from "./transactionmenu";
 import FusionMenus from "./fusionmenu";
@@ -42,7 +43,9 @@ const Navbar = () => {
                  case "Transaction":
                     return (
                         <div>
-                           <TransactionMenu></TransactionMenu>
+                            <AddressDetails></AddressDetails>
+                            {/* <h2 className="text-white text-lg font-bold">Comming soon</h2> */}
+                           {/* <TransactionMenu></TransactionMenu> */}
                         </div>
     
                     );

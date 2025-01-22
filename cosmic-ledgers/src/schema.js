@@ -93,9 +93,46 @@ type NativeToken {
     profit: Profit!
   }
 
+  type ScrapedRowTokens {
+  name: String!
+  symbol: String!
+  amount: String!
+  price: String!
+  value: String!
+}
+
+type ScrapedRowTokens {
+  name: String!
+  symbol: String!
+  amount: String!
+  price: String!
+  value: String!
+}
+
+type TransactionRow {
+  status: String
+  txHash: String!
+  block: String!
+  confirmationTime: String!
+  from: String!
+  to: String!
+  function: String!
+  txFee: String!
+}
+
+
+type SupraPrice {
+    price: Float
+    timestamp: String
+}
+
 type Query {
   walletHoldings(address: String!): [WalletHolding!]!
   nftHoldings(address: String!): [NFTHolding!]!
+  scrapedTableData(address: String!): [ScrapedRowTokens!]!
+  transactionTableData(address: String!): [TransactionRow!]!
+  getSupraPrice: SupraPrice
+
 }
 
 `;

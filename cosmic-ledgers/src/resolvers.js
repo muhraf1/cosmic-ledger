@@ -1,6 +1,7 @@
   // resolvers.js
   import { gql } from 'apollo-server-express';
   import axios from 'axios';
+  import puppeteer from 'puppeteer';
 
   const resolvers = {
     Query: {
@@ -87,6 +88,92 @@
           return [];
         }
       },
+
+      // supra fetch balance 
+      scrapedTableData: async (_, { address }) => {
+        try {
+          const browser = await puppeteer.launch({ headless: true });
+          const page = await browser.newPage();
+          await page.goto(`https://suprascan.io/address/${address}/f?tab=tokens&pageNo=1&rows=10`, { waitUntil: 'networkidle2' });
+  
+          const data = await page.evaluate(() => {
+            const rows = Array.from(document.querySelectorAll('table.resizer-table tbody tr'));
+            return rows.map(row => {
+              const [name, symbol, amount, price, value] = Array.from(row.querySelectorAll('td')).map(td => td.innerText.trim());
+              return { name, symbol, amount, price, value };
+            });
+          });
+  
+          await browser.close();
+          return data;
+  
+        } catch (error) {
+          console.error('Error scraping table data:', error.message);
+          return [];
+        }
+      },
+  
+      transactionTableData: async (_, { address }) => {
+        try {
+          const browser = await puppeteer.launch({ headless: true });
+          const page = await browser.newPage();
+          await page.goto(`https://suprascan.io/address/${address}/f?tab=transactions&pageNo=1&rows=10`, { waitUntil: 'networkidle2' });
+  
+          const data = await page.evaluate(() => {
+            const rows = Array.from(document.querySelectorAll('table.resizer-table tbody tr'));
+            return rows.map(row => {
+              const cells = Array.from(row.querySelectorAll('td')).map(td => td.innerText.trim());
+              return {
+                status: cells[0],
+                txHash: cells[1],
+                block: cells[2],
+                confirmationTime: cells[3],
+                from: cells[4],
+                to: cells[5],
+                function: cells[6],
+                txFee: cells[7]
+              };
+            });
+          });
+  
+          await browser.close();
+          return data;
+  
+        } catch (error) {
+          console.error('Error scraping transaction data:', error.message);
+          return [];
+        }
+      },
+
+      getSupraPrice: async () => {
+        try {
+          const response = await fetch('https://prod-kline-rest.supra.com/latest?trading_pair=supra_usdt', {
+            headers: {
+              'x-api-key': '356464a14d94ec3c455480727eee9c4fd58233bfd8cdeb1701d2aec132d4d670'
+            }
+          });
+      
+          if (!response.ok) {
+            throw new Error(`API request failed with status: ${response.status}`);
+          }
+      
+          const data = await response.json();
+          const priceInfo = data.instruments[0]; // Here's how to access the first (and only) item in the array
+      
+          return {
+            price: parseFloat(priceInfo.currentPrice), // Ensure the price is a number
+            timestamp: priceInfo.timestamp
+          };
+        } catch (error) {
+          console.error('Failed to fetch Supra price:', error);
+          return {
+            price: 0, // Return a default value or handle error as needed
+            timestamp: new Date().toISOString() // Use current timestamp if API fails
+          };
+        }
+      }
+    
+    
 
       
     }

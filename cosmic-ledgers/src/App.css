@@ -24,7 +24,21 @@
   border: 2px solid #BA84F4; 
   
 }
+.loader-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 20vh; /* Full height of the screen */
+}
 
+.loader {
+  border: 16px solid #FAD2F5; /* Light grey */
+  border-top: 16px solid #8C4FAD; /* violet */
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  animation: spin 2s linear infinite;
+}
 
 .custom-width {
   width: 580px;
@@ -47,6 +61,11 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 @media (prefers-reduced-motion: no-preference) {

@@ -1,8 +1,10 @@
 
 
-import * as React from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "./navbar";
+import { useQuery, gql } from '@apollo/client'; // Assuming Apollo Client is set up in your project
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
+
 import {
   Card,
   CardContent,
@@ -10,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+
 import {
   ChartContainer,
   ChartLegend,
@@ -17,6 +20,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
+
 import {
   Select,
   SelectContent,
@@ -28,6 +32,8 @@ import {
 import ChartSwitch from "./chartswitch";
 
 import { ChevronUp, ChartNoAxesColumnIncreasing, } from 'lucide-react';
+import { useWalletContext } from "./WalletContext";
+
 
 const chartData = [
   // ... (data array here)
@@ -138,12 +144,68 @@ const chartConfig = {
   },
 };
 
+const GET_SUPRA_PRICE = gql`
+  query GetSupraPrice {
+    getSupraPrice {
+      price
+      timestamp
+    }
+  }
+`;
+
+const GET_WALLET_HOLDINGS = gql`
+ query WalletHoldings($address: String!) {
+  walletHoldings(address: $address) {
+    owner
+    cmc_id
+    cg_id
+    cmc_slug
+    name
+    symbol
+    logo
+    amount
+    amountRaw
+    balance
+    contractAddress
+    contractDecimals
+    rate
+    price {
+      price
+      symbol
+      decimal
+      source
+    }
+    last_24h_price {
+      symbol
+      price
+      timestamp
+      confidence
+      source
+    }
+    avgCost
+    last_transferred_at
+    positionId
+    category
+    sector
+    rank
+    positionType
+    chain
+    is_spam
+  }
+}
+`;
+
+
+
+
 const Content = () => {
-  const [timeRange, setTimeRange] = React.useState("90d");
+  const [timeRange, setTimeRange] = useState("90d");
+  const [totalBalance, setTotalBalance] = useState(0); // State for total balance
+  const { selectedWalletAddress } = useWalletContext();
 
   const filteredData = chartData.filter((item) => {
     const date = new Date(item.date);
-    const referenceDate = new Date("2024-06-30");
+    const referenceDate = new Date("2024-11-30");
     let daysToSubtract = 90;
     if (timeRange === "30d") {
       daysToSubtract = 30;
@@ -154,6 +216,75 @@ const Content = () => {
     startDate.setDate(startDate.getDate() - daysToSubtract);
     return date >= startDate;
   });
+  const address = selectedWalletAddress; // Use the selected wallet's address
+  console.log('Address content test:', address);
+
+
+  const { loading: holdingsLoading, error: holdingsError, data: holdingsData } = useQuery(GET_WALLET_HOLDINGS, {
+    variables: { address: selectedWalletAddress },
+    skip: !selectedWalletAddress 
+  });
+
+
+  const { loading: priceLoading, error: priceError, data: priceData } = useQuery(GET_SUPRA_PRICE);
+
+
+
+  useEffect(() => {
+    if (holdingsData && holdingsData.walletHoldings) {
+      let balance;
+      if (selectedWalletAddress?.chain === 'supra' && priceData?.getSupraPrice) {
+        balance = calculateTotalBalanceSupra(holdingsData.walletHoldings, priceData.getSupraPrice.price);
+      } else {
+        balance = calculateTotalBalance(holdingsData.walletHoldings);
+      }
+      setTotalBalance(balance);
+    }
+  }, [holdingsData, priceData, selectedWalletAddress]);
+
+console.log('check chain',selectedWalletAddress?.chain);
+
+  const calculateTotalBalance = (holdings) => {
+    let total = 0;
+
+    for (const holding of holdings) {
+      const amount = parseFloat(holding.amount);
+      const price = holding.price.price;
+      console.log('check amount:', holding.amount);
+      console.log('check price:', holding.price.price);
+
+      // Calculate the value of each token before adding to total
+      if (!isNaN(amount) && !isNaN(price)) {
+        const tokenValue = amount * price;
+        total += tokenValue;
+        console.log('Token value:', tokenValue, 'for', holding.name);
+      } else {
+        console.warn('Invalid amount or price for token:', holding.name, holding.symbol, { amount, price });
+      }
+    }
+
+    console.log('Total balance calculated:', total);
+    return total;
+  };
+
+
+
+  const calculateTotalBalanceSupra = (holdings, supraPrice) => {
+    let total = 0;
+    for (const holding of holdings) {
+      const amount = parseFloat(holding.amount);
+      if (!isNaN(amount)) {
+        total += amount * supraPrice;
+      } else {
+        console.warn('Invalid amount for token:', holding.name, holding.symbol, { amount });
+      }
+    }
+    return total;
+  };
+
+  console.log("check balance on content", totalBalance);
+  console.log("check supra price",)
+  // console.log("check total balance",total);
 
   // Styles for glass effect
   const glassLayer2Styles = {
@@ -165,9 +296,25 @@ const Content = () => {
     borderRadius: '8px',
   };
 
+
+  if (holdingsLoading || priceLoading) {
+    return (
+      <div className="loader-container">
+        <div className="loader"></div>
+      </div>
+    );
+  }
+
+  if (holdingsError) {
+    return <p>Error loading wallet holdings: {holdingsError.message}</p>;
+  }
+
+  if (priceError) {
+    return <p>Error loading Supra price: {priceError.message}</p>;
+  } 
   return (
     <Card className=" py-2 px-4 bg-transparent" style={glassLayer2Styles}>
-       
+
       <CardHeader className="flex items-center gap-2 p-0 pt-2 sm:flex-row  px-3 border-none  bg-transparent">
         <div className="grid flex-1 gap-1 text-center sm:text-left">
           {/* title */}
@@ -176,16 +323,15 @@ const Content = () => {
           <div className="flex justify-between">
             {/* amount */}
             <div className="flex-col">
-              <span className="font-bold text-2xl text-white">$10,000</span>
-              {/* percentage amount and slope */}
-              <div className="flex justify-between space-x-0.5">
-                <span className="text-[#6CCF59] font-bold">$2,00</span>
-                {/* slope */}
-                <div className="flex justify-center items-center">
-                  <button className="bg-[#6CCF59]/30 text-[#6CCF59] text-xs flex p-0 py-0.5  rounded-sm"> <ChevronUp className="text-[#6CCF59] w-4 h-4" /> 2% </button>
-                </div>
-
-              </div>
+            <span className="font-bold text-2xl text-white">
+                {totalBalance.toLocaleString('en-US', {
+                  style: 'currency',
+                  currency: 'USD',
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 3
+                })}
+              </span>
+             
 
             </div>
 
@@ -275,9 +421,9 @@ const Content = () => {
         <Navbar ></Navbar>
       </CardContent>
 
-   
+
     </Card>
- 
+
   );
 }
 

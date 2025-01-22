@@ -26,12 +26,19 @@ const WalletSelect = () => {
               </SelectItem>
               {wallets.map((wallet, index) => (
                 <SelectItem 
-                  key={wallet.address}
-                  value={wallet.address} 
-                  className="text-[#B470D8] hover:text-[#ffff] hover:bg-[#B470D8]"
-                >
+                key={wallet.address}
+                value={wallet.address} 
+                className="text-[#B470D8] hover:text-[#ffff] hover:bg-[#B470D8] px-3 py-2 flex items-center"
+              >
+                <img 
+                  src={`./src/assets/${wallet.chain}_logo.png`} 
+                  alt={`${wallet.chain} Logo`}
+                  className="w-6 h-6 mr-2"
+                />
+                <span className="truncate" title={wallet.address}>
                   {wallet.address}
-                </SelectItem>
+                </span>
+              </SelectItem>
               ))}
             </SelectGroup>
           </SelectContent>

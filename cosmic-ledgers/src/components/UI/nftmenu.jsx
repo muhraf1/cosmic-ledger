@@ -229,7 +229,7 @@ const GET_NFT_HOLDINGS = gql`
 
                             {/* detailed nft  */}
                             <div className="w-full flex text-white text-xs font-bold justify-end">
-                            <span>Total Items: {nftList.length}</span>
+                            <span>Total Items: {data?.nftHoldings?.reduce((acc, cur) => acc + cur.tokens.length, 0) || 0}</span>
                             </div>
                             <Separator className="mt-3 bg-white/10"></Separator>
                             {/* filters price, listed & not listed, search bar and button display grid vs list  */}
