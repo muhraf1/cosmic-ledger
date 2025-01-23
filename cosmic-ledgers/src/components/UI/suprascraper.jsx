@@ -48,6 +48,9 @@ function AddressDetails() {
   if (scrapedLoading || transactionLoading) return <p>Loading...</p>;
   if (scrapedError || transactionError) return <p>Error :(</p>;
 
+  if (!transactionData ) return <p>No Transaction data available</p>;
+
+
   const handleRowClick = (txHash) => {
     window.open(`https://suprascan.io/tx/${txHash}`, '_blank');
   };
@@ -72,12 +75,14 @@ function AddressDetails() {
             <TableBody className="text-white font-semibold">
               {transactionData.transactionTableData.length > 0 ? (
                 transactionData.transactionTableData.map((tx, index) => (
-                  <TableRow 
-                    key={index} 
+                  <TableRow
+                    key={index}
                     className="border-none cursor-pointer hover:bg-[#4A315A]"
                     onClick={() => handleRowClick(tx.txHash)}
                   >
-                    <TableCell className="text-xs">{tx.txHash}</TableCell>
+                    <TableCell className="text-xs" style={{ maxWidth: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {tx.txHash}
+                    </TableCell>
                     <TableCell className="text-xs">{tx.from.slice(0, 10)}...</TableCell>
                     <TableCell className="text-xs">{tx.to.slice(0, 10)}...</TableCell>
                     <TableCell className="text-xs">{tx.function}</TableCell>

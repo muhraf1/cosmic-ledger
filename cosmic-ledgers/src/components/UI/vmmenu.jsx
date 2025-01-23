@@ -4,6 +4,8 @@ import { useQuery, gql } from '@apollo/client'; // Assuming Apollo Client is set
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "./table"; // Assuming you're using a UI component library like Radix UI for tables
 import WalletProvider, { useWalletContext } from "./WalletContext";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./dialog";
+import LineChartComponent from "./LineChartComponent"; // Import the LineChartComponent
+
 // Define the GraphQL query for fetching wallet holdings
 const GET_WALLET_HOLDINGS = gql`
  query WalletHoldings($address: String!) {
@@ -374,11 +376,23 @@ const VmMenu = () => {
                                             <DialogContent className="sm:max-w-[425px]">
                                                 <DialogHeader>
                                                     <DialogTitle>{holding.name}</DialogTitle>
+                                                                                                    {/* Add the Line Chart here */}
+                                                <LineChartComponent />
+
                                                     <DialogDescription>
                                                         Symbol: {holding.symbol}<br />
                                                         Price: ${selectedWallet?.chain === 'supra' ? priceData?.getSupraPrice?.price?.toFixed(5) : holding.price?.price || "N/A"}<br />
                                                         Amount: {holding.amount || "N/A"}<br />
-                                                        USD Value: {holding.value || (parseFloat(holding.amount || 0) * (selectedWallet?.chain === 'supra' ? priceData?.getSupraPrice?.price : holding.price?.price || 0)).toFixed(2)}
+                                                        USD Value: {holding.price && holding.amount ? `$${(
+                                                            parseFloat(
+                                                                selectedWallet?.chain === 'supra'
+                                                                    ? holding.amount.replace(/,/g, '')
+                                                                    : holding.amount
+                                                            ) * (selectedWallet?.chain === 'supra' ? priceData?.getSupraPrice?.price : holding.price.price)
+                                                        ).toLocaleString('en-US', {
+                                                            minimumFractionDigits: 2,
+                                                            maximumFractionDigits: 3
+                                                        })}` : "N/A"}
                                                     </DialogDescription>
                                                 </DialogHeader>
                                             </DialogContent>

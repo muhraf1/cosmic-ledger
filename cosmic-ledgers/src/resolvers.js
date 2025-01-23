@@ -2,9 +2,13 @@
   import { gql } from 'apollo-server-express';
   import axios from 'axios';
   import puppeteer from 'puppeteer';
+  import { format, subDays } from 'date-fns'; // Add date-fns for easier date manipulation
+
+
   import dotenv from 'dotenv'; // Add this line to import dotenv
 
   const resolvers = {
+    
     Query: {
       walletHoldings: async (_, { address }) => {
         try {
@@ -185,11 +189,48 @@
             timestamp: new Date().toISOString() // Use current timestamp if API fails
           };
         }
+      },
+
+
+
+
+
+      getPriceHistory: async (_, {
+        trading_pair = 'btc_usdt',
+        startDate,
+        endDate,
+        interval = '36000'
+      }) => {
+        try {
+          const end = endDate ? new Date(parseInt(endDate)) : new Date();
+          const start = startDate ? new Date(parseInt(startDate)) : subDays(end, 7);
+
+          const response = await axios.get('https://prod-kline-rest.supra.com/history', {
+            params: {
+              trading_pair,
+              startDate: start.getTime().toString(),
+              endDate: end.getTime().toString(),
+              interval
+            },
+            headers: {
+              'x-api-key': "356464a14d94ec3c455480727eee9c4fd58233bfd8cdeb1701d2aec132d4d670"
+            }
+          });
+
+          return response.data.map(data => ({
+            time: new Date(parseInt(data.time)).toISOString(),
+            timestamp: data.time.toString(),
+            open: data.open.toString(),
+            high: data.high.toString(),
+            low: data.low.toString(),
+            close: data.close.toString()
+          }));
+        } catch (error) {
+          console.error('Failed to fetch price history:', error.message);
+          return [];
+        }
       }
     
-    
-
-      
     }
     
 

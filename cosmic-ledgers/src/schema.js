@@ -2,6 +2,8 @@
 import { gql } from 'apollo-server-express';
 
 const typeDefs = gql`
+
+
  type Price {
   price: Float!
   symbol: String
@@ -126,13 +128,22 @@ type SupraPrice {
     timestamp: String
 }
 
+ type PriceData {
+    time: String
+    timestamp: String
+    open: String
+    high: String
+    low: String
+    close: String
+  }
+
 type Query {
   walletHoldings(address: String!): [WalletHolding!]!
   nftHoldings(address: String!): [NFTHolding!]!
   scrapedTableData(address: String!): [ScrapedRowTokens!]!
   transactionTableData(address: String!): [TransactionRow!]!
   getSupraPrice: SupraPrice
-
+  getPriceHistory(trading_pair: String, startDate:String , endDate:String, interval:String): [PriceData!]!
 }
 
 `;
