@@ -5,8 +5,9 @@
   import { format, subDays } from 'date-fns'; // Add date-fns for easier date manipulation
 
 
-  import dotenv from 'dotenv'; // Add this line to import dotenv
+  import dotenv from 'dotenv';
 
+dotenv.config();
   const resolvers = {
     
     Query: {
@@ -166,7 +167,7 @@
         try {
           const response = await fetch('https://prod-kline-rest.supra.com/latest?trading_pair=supra_usdt', {
             headers: {
-              'x-api-key': process.env.SUPRA_ORACLE_API_KEY // Use the environment variable here
+              'x-api-key': process.env.SUPRA_ORACLE_API_KEY
             }
           });
       
@@ -212,8 +213,7 @@
               interval
             },
             headers: {
-              'x-api-key': process.env.SUPRA_ORACLE_API_KEY // Use the environment variable here
-
+              'x-api-key': process.env.SUPRA_ORACLE_API_KEY
             }
           });
 
