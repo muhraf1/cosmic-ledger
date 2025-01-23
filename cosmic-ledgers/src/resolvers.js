@@ -166,8 +166,7 @@
         try {
           const response = await fetch('https://prod-kline-rest.supra.com/latest?trading_pair=supra_usdt', {
             headers: {
-              // 'x-api-key': process.env.SUPRA_ORACLE_API_KEY // Use the environment variable here
-                  'x-api-key': "356464a14d94ec3c455480727eee9c4fd58233bfd8cdeb1701d2aec132d4d670" // Use the environment variable here
+              'x-api-key': process.env.SUPRA_ORACLE_API_KEY // Use the environment variable here
             }
           });
       
@@ -213,7 +212,8 @@
               interval
             },
             headers: {
-              'x-api-key': "356464a14d94ec3c455480727eee9c4fd58233bfd8cdeb1701d2aec132d4d670"
+              'x-api-key': process.env.SUPRA_ORACLE_API_KEY // Use the environment variable here
+
             }
           });
 
