@@ -70,7 +70,7 @@ type NativeToken {
     imageUrl: String!
     tokenId: String!
     contractAddress: String!
-    name: String!
+    name: String
     rarityScore: Int!
     rank: String!
     price: Float!

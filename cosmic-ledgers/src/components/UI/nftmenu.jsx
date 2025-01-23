@@ -5,6 +5,7 @@ import { Separator } from "./separator";
 import { Input } from "@/components/ui/input";
 import GridSwitch from "./GridSwitch";
 import WalletProvider, { useWalletContext } from "./WalletContext";
+import NftFilter from "./nftfilter";
 
 import {
     Dialog,
@@ -157,37 +158,41 @@ const GET_NFT_HOLDINGS = gql`
                 {data.nftHoldings.map((holding, index) => (
                   holding.tokens.map((token, i) => (
                     <Dialog key={`${index}-${i}`}>
-                      <DialogTrigger asChild>
-                        <div className="text-left rounded-lg bg-[#D9D9D9]/5 border border-white/10 bottom-2 cursor-pointer">
-                          <img src={token.imageUrl} alt={token.name} className="w-full h-fit object-cover mb-2" />
-                          <div className="px-2 py-2">
-                            <div className="text-sm font-bold text-white">{token.name}</div>
-                            <div className="text-xs font-medium text-white/70">{holding.collection.name}</div>
-                            <div className="text-sm font-semibold text-white">{token.amount}</div>
-                          </div>
-                        </div>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-fit h-auto">
-                        <DialogHeader className="flex flex-col items-center">
-                          <DialogTitle>{token.name}</DialogTitle>
-                          <DialogDescription className="text-center">
-                            <p>{holding.collection.name}</p>
-                            <p>{token.amount}</p>
-                            <img 
-                              src={token.imageUrl} 
-                              alt={token.name} 
-                              className="w-full object-cover mt-2" 
-                              style={{ maxHeight: '70vh' }}  
-                            />
-                          </DialogDescription>
-                        </DialogHeader>
-                      </DialogContent>
-                    </Dialog>
-                  ))
-                ))}
-              </div>
-            );
-          };
+                              <DialogTrigger asChild>
+                                <div className="text-left rounded-lg bg-[#D9D9D9]/5 border border-white/10 bottom-2 cursor-pointer">
+                                  <img 
+                                    src={token.imageUrl || holding.collection.imageUrl || ""} 
+                                    alt={token.name} 
+                                    className="w-full h-fit object-cover mb-2" 
+                                  />
+                                  <div className="px-2 py-2">
+                                    <div className="text-sm font-bold text-white">{token.name}</div>
+                                    <div className="text-xs font-medium text-white/70">{holding.collection.name}</div>
+                                    <div className="text-sm font-semibold text-white">{token.amount}</div>
+                                  </div>
+                                </div>
+                              </DialogTrigger>
+                              <DialogContent className="sm:max-w-fit h-auto">
+                                <DialogHeader className="flex flex-col items-center">
+                                  <DialogTitle>{token.name}</DialogTitle>
+                                  <DialogDescription className="text-center">
+                                    <p>{holding.collection.name}</p>
+                                    <p>{token.amount}</p>
+                                    <img 
+                                      src={token.imageUrl || holding.collection.imageUrl || ""} 
+                                      alt={token.name} 
+                                      className="w-full object-cover mt-2" 
+                                      style={{ maxHeight: '70vh' }}  
+                                    />
+                                  </DialogDescription>
+                                </DialogHeader>
+                              </DialogContent>
+                            </Dialog>
+                          ))
+                        ))}
+                      </div>
+                    );
+                  };
 
         const renderSectionContent = () => {
             const data = chainData[activeSection] || [];
@@ -226,80 +231,8 @@ const GET_NFT_HOLDINGS = gql`
 
                             </div> */}
 
-
-                            {/* detailed nft  */}
-                            <div className="w-full flex text-white text-xs font-bold justify-end">
-                            <span>Total Items: {data?.nftHoldings?.reduce((acc, cur) => acc + cur.tokens.length, 0) || 0}</span>
-                            </div>
-                            <Separator className="mt-3 bg-white/10"></Separator>
-                            {/* filters price, listed & not listed, search bar and button display grid vs list  */}
-                            <div className="flex flex-row justify-between items-center gap-2">
-                                <div className="flex items-center gap-2">
-                                    {/* Filters for price */}
-                                    <div className="flex">
-                                        <Select className="p-0">
-                                            <SelectTrigger className="w-[150px] bg-white/5 text-white border-white/10 text-[8px] mt-2 font-medium">
-                                                <SelectValue placeholder="Recently Received" />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-white/10 border-white/10 backdrop-blur-md font-semibold">
-                                                <SelectGroup>
-                                                    <SelectItem value="Recently Received" className="text-white">
-                                                        Recently Received
-                                                    </SelectItem>
-                                                    <SelectItem value="Price: High to Low" className="text-white">
-                                                        Price: High to Low
-                                                    </SelectItem>
-                                                    <SelectItem value="Price: Low to High" className="text-white">
-                                                        Price: Low to High
-                                                    </SelectItem>
-                                                    <SelectItem value="Recently Listed" className="text-white">
-                                                        Recently Listed
-                                                    </SelectItem>
-                                                    <SelectItem value="Common to Rare" className="text-white">
-                                                        Common to Rare
-                                                    </SelectItem>
-                                                    <SelectItem value="Rare to Common" className="text-white">
-                                                        Rare to Common
-                                                    </SelectItem>
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    {/* Listed & Non-listed */}
-                                    <div className="flex">
-                                        <Select>
-                                            <SelectTrigger className="w-[80px] bg-white/5 text-white border-white/10 text-[9px] mt-2 font-medium">
-                                                <SelectValue placeholder="All" />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-white/10 border-white/10 backdrop-blur-md font-semibold">
-                                                <SelectGroup>
-                                                    <SelectItem value="All" className="text-white">
-                                                        All
-                                                    </SelectItem>
-                                                    <SelectItem value="Listed" className="text-white">
-                                                        Listed
-                                                    </SelectItem>
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-
-                                {/* Button display grid and list */}
-                                <div className="flex justify-center	 items-center">
-                                    <GridSwitch
-                                        onSwitch={(type) => {
-                                            // Handle the chart type change
-                                            console.log(`Switched to ${type} chart`);
-                                        }}
-                                        defaultType="bar"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* NFT sections */}
-                            {/*  2 grids  1row have 2 nft cards when excced creare new row */}
+                            {/* nft filer */}
+                            {/* <NftFilter></NftFilter> */}
                     
                             {renderNftCards()}
 

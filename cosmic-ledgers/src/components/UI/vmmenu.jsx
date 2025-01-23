@@ -250,8 +250,22 @@ const VmMenu = () => {
         if (!holdings) {
             return <p>No data available for this address.</p>;
         }
+    
+        // Create a new array for sorting to avoid modifying the original data
+        const sortedHoldings = [...holdings].sort((a, b) => {
+            const aValue = selectedWallet?.chain === 'supra' 
+                ? parseFloat(a.amount.replace(/,/g, '')) * priceData?.getSupraPrice?.price 
+                : parseFloat(a.amount || 0) * (a.price?.price || 0);
+            const bValue = selectedWallet?.chain === 'supra' 
+                ? parseFloat(b.amount.replace(/,/g, '')) * priceData?.getSupraPrice?.price 
+                : parseFloat(b.amount || 0) * (b.price?.price || 0);
+            
+            return bValue - aValue; // Sort in descending order
+        });
+    
 
-        const sectionHoldings = holdings.filter(holding =>
+    
+        const sectionHoldings = sortedHoldings.filter(holding =>
             activeSection === "All" || (holding.chain === activeSection || activeSection === 'All')
         );
 
