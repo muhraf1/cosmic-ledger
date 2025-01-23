@@ -80,24 +80,24 @@ const VmMenu = () => {
 
     useEffect(() => {
         if (selectedWalletAddress === null) { // 'All Wallet' is selected
-          const fetchAllHoldings = async () => {
-            const allHoldings = [];
-            for (const wallet of wallets) {
-              const { data } = await useQuery(GET_WALLET_HOLDINGS, { variables: { address: wallet.address } });
-              if (data?.walletHoldings) {
-                allHoldings.push(...data.walletHoldings);
-              }
-            }
-            setAllHoldings(allHoldings);
-          };
-          fetchAllHoldings();
+            const fetchAllHoldings = async () => {
+                const allHoldings = [];
+                for (const wallet of wallets) {
+                    const { data } = await useQuery(GET_WALLET_HOLDINGS, { variables: { address: wallet.address } });
+                    if (data?.walletHoldings) {
+                        allHoldings.push(...data.walletHoldings);
+                    }
+                }
+                setAllHoldings(allHoldings);
+            };
+            fetchAllHoldings();
         }
-      }, [selectedWalletAddress, wallets]);
-  
-  
+    }, [selectedWalletAddress, wallets]);
+
+
     const address = selectedWalletAddress; // Use the selected wallet's address
     console.log('Address used for query:', address);
-  
+
     // Determine which query to use based on the selected wallet's chain
     const selectedWallet = wallets.find(wallet => wallet.address === selectedWalletAddress);
     const query = selectedWallet?.chain === 'supra' ? SCRAPED_TABLE_DATA : GET_WALLET_HOLDINGS;
@@ -115,7 +115,7 @@ const VmMenu = () => {
 
     console.log("fetcing data", data);
     // Sections array
-     // Sections array
+    // Sections array
     const sections = ["All", "EVM", "SVM", "Move"];
 
 
@@ -242,14 +242,16 @@ const VmMenu = () => {
     const renderSectionContent = () => {
         if (loading || priceLoading) return <p>Loading...</p>;
         if (error || priceError) return <p>Error: {(error || priceError).message}</p>;
-        
+
         // const data = chainData[activeSection] || [];
         // const dataprotocol = protocolData[activeSection] || [];
         // Determine the data format based on which query was used
         let holdings = selectedWallet?.chain === 'supra' ? data?.scrapedTableData : data?.walletHoldings;
-        holdings = holdings || [];
+        if (!holdings) {
+            return <p>No data available for this address.</p>;
+        }
 
-         const sectionHoldings = holdings.filter(holding =>
+        const sectionHoldings = holdings.filter(holding =>
             activeSection === "All" || (holding.chain === activeSection || activeSection === 'All')
         );
 
@@ -305,66 +307,73 @@ const VmMenu = () => {
                             ))}
                         </div> */}
 
-                       {/* Token Tables */}
-                <div className="flex flex-col space-y-2">
-                    <Table className="bg-[#3A2048] rounded-[5px]">
-                        <TableHeader className="text-white bg-[#5A3D6A] ">
-                            <TableRow className="border-transparent rounded-lg text-xs">
-                                <TableHead className="w-[100px] text-white p-2 rounded-l-[5px]">Token</TableHead>
-                                <TableHead className=" text-white">Price</TableHead>
-                                <TableHead className=" text-white">Amount</TableHead>
-                                <TableHead className=" text-white text-right rounded-r-[5px]">USD Value</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody className="text-white font-semibold border-none">
-                            {sectionHoldings.map((holding, index) => (
-                                <Dialog key={holding.name || index}>
-                                    <DialogTrigger asChild>
-                                        <TableRow className="border-none cursor-pointer hover:bg-[#5A3D6A]">
-                                            <TableCell className="font-medium text-xs">
-                                                <div className="flex items-center">
-                                                    {selectedWallet?.chain !== 'supra' && 
-                                                        <img src={holding.logo} alt={holding.symbol} className="h-6 w-6 mr-2" />
-                                                    }
-                                                    <span className="text-xs">{holding.symbol || "N/A"}</span>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="text-xs">
-                                                {selectedWallet?.chain === 'supra' ? 
-                                                    `$${priceData?.getSupraPrice?.price?.toFixed(5) || "N/A"}` : 
-                                                    (holding.price?.price ? `$${holding.price.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "N/A")
-                                                }
-                                            </TableCell>
-                                            <TableCell className="text-xs">
-                                                {holding.amount ? holding.amount.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : "N/A"}
-                                            </TableCell>
-                                            <TableCell className="text-right text-xs">
-                                                {holding.price && holding.amount ? `$${(
-                                                    parseFloat(holding.amount) * (selectedWallet?.chain === 'supra' ? priceData?.getSupraPrice?.price : holding.price.price)
-                                                ).toLocaleString(undefined, {
-                                                    minimumFractionDigits: 1,
-                                                    maximumFractionDigits: 1
-                                                })}` : "N/A"}
-                                            </TableCell>
-                                        </TableRow>
-                                    </DialogTrigger>
-                                    <DialogContent className="sm:max-w-[425px]">
-                                        <DialogHeader>
-                                            <DialogTitle>{holding.name}</DialogTitle>
-                                            <DialogDescription>
-                                                Symbol: {holding.symbol}<br />
-                                                Price: ${selectedWallet?.chain === 'supra' ? priceData?.getSupraPrice?.price?.toFixed(5) : holding.price?.price || "N/A"}<br />
-                                                Amount: {holding.amount || "N/A"}<br />
-                                                USD Value: {holding.value || (parseFloat(holding.amount || 0) * (selectedWallet?.chain === 'supra' ? priceData?.getSupraPrice?.price : holding.price?.price || 0)).toFixed(2)}
-                                            </DialogDescription>
-                                        </DialogHeader>
-                                    </DialogContent>
-                                </Dialog>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
-            </div>
+                        {/* Token Tables */}
+                        <div className="flex flex-col space-y-2">
+                            <Table className="bg-[#3A2048] rounded-[5px]">
+                                <TableHeader className="text-white bg-[#5A3D6A] ">
+                                    <TableRow className="border-transparent rounded-lg text-xs">
+                                        <TableHead className="w-[100px] text-white p-2 rounded-l-[5px]">Token</TableHead>
+                                        <TableHead className=" text-white">Price</TableHead>
+                                        <TableHead className=" text-white">Amount</TableHead>
+                                        <TableHead className=" text-white text-right rounded-r-[5px]">USD Value</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody className="text-white font-semibold border-none">
+                                    {sectionHoldings.map((holding, index) => (
+                                        <Dialog key={holding.name || index}>
+                                            <DialogTrigger asChild>
+                                                <TableRow className="border-none cursor-pointer hover:bg-[#5A3D6A]">
+                                                    <TableCell className="font-medium text-xs">
+                                                        <div className="flex items-center">
+                                                            {selectedWallet?.chain === 'supra'
+                                                                ? <img src="./src/assets/supra_logo.png" alt="Supra" className="h-6 w-6 mr-2" />
+                                                                : (selectedWallet?.chain !== 'supra' && holding.logo &&
+                                                                    <img src={holding.logo} alt={holding.symbol} className="h-6 w-6 mr-2" />
+                                                                )
+                                                            }
+                                                            <span className="text-xs">{holding.symbol || "N/A"}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="text-xs">
+                                                        {selectedWallet?.chain === 'supra' ?
+                                                            `$${priceData?.getSupraPrice?.price?.toFixed(5) || "N/A"}` :
+                                                            (holding.price?.price ? `$${holding.price.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "N/A")
+                                                        }
+                                                    </TableCell>
+                                                    <TableCell className="text-xs">
+                                                        {holding.amount ? holding.amount.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : "N/A"}
+                                                    </TableCell>
+                                                    <TableCell className="text-right text-xs">
+                                                        {holding.price && holding.amount ? `$${(
+                                                            parseFloat(
+                                                                selectedWallet?.chain === 'supra'
+                                                                    ? holding.amount.replace(/,/g, '')
+                                                                    : holding.amount
+                                                            ) * (selectedWallet?.chain === 'supra' ? priceData?.getSupraPrice?.price : holding.price.price)
+                                                        ).toLocaleString('en-US', {
+                                                            minimumFractionDigits: 2,
+                                                            maximumFractionDigits: 3
+                                                        })}` : "N/A"}
+                                                    </TableCell>
+                                                </TableRow>
+                                            </DialogTrigger>
+                                            <DialogContent className="sm:max-w-[425px]">
+                                                <DialogHeader>
+                                                    <DialogTitle>{holding.name}</DialogTitle>
+                                                    <DialogDescription>
+                                                        Symbol: {holding.symbol}<br />
+                                                        Price: ${selectedWallet?.chain === 'supra' ? priceData?.getSupraPrice?.price?.toFixed(5) : holding.price?.price || "N/A"}<br />
+                                                        Amount: {holding.amount || "N/A"}<br />
+                                                        USD Value: {holding.value || (parseFloat(holding.amount || 0) * (selectedWallet?.chain === 'supra' ? priceData?.getSupraPrice?.price : holding.price?.price || 0)).toFixed(2)}
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                            </DialogContent>
+                                        </Dialog>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </div>
 
                 );
             default:

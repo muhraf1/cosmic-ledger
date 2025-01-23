@@ -1,19 +1,19 @@
 import React from "react";
 import { useWalletContext } from "./WalletContext";
-import { useQuery, gql } from '@apollo/client'; // Assuming Apollo Client is set up in your project
-
-
+import { useQuery, gql } from '@apollo/client';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "./table";
+import { Separator } from "./separator";
 
 const SCRAPED_TABLE_DATA = gql`
   query GetScrapedTableData($address: String!) {
-  scrapedTableData(address: $address) {
-    name
-    symbol
-    amount
-    price
-    value
+    scrapedTableData(address: $address) {
+      name
+      symbol
+      amount
+      price
+      value
+    }
   }
-}
 `;
 
 const TRANSACTION_TABLE_DATA = gql`
@@ -31,42 +31,73 @@ const TRANSACTION_TABLE_DATA = gql`
   }
 `;
 
-
 function AddressDetails() {
-     // Scraped Table Data
-     const { selectedWalletAddress } = useWalletContext();
-
-
-     const address = selectedWalletAddress; // Use the selected wallet's address
+  const { selectedWalletAddress } = useWalletContext();
+  const address = selectedWalletAddress;
 
   const { loading: scrapedLoading, error: scrapedError, data: scrapedData } = useQuery(SCRAPED_TABLE_DATA, {
-    variables: { address: address },
-    skip: !address // Skip the query if no address is provided
+    variables: { address },
+    skip: !address
   });
-  console.log("check address",address);
-  // Transaction Table Data
+
   const { loading: transactionLoading, error: transactionError, data: transactionData } = useQuery(TRANSACTION_TABLE_DATA, {
-    variables: { address: address },
-    skip: !address // Skip the query if no address is provided
+    variables: { address },
+    skip: !address
   });
 
   if (scrapedLoading || transactionLoading) return <p>Loading...</p>;
   if (scrapedError || transactionError) return <p>Error :(</p>;
 
+  const handleRowClick = (txHash) => {
+    window.open(`https://suprascan.io/tx/${txHash}`, '_blank');
+  };
 
-    return (
-<div>
-<h2>Scraped Table Data</h2>
-      <ul>{scrapedData.scrapedTableData.map(s => <li key={s.name}>{s.name} - {s.symbol} - {s.amount}</li>)}</ul>
+  return (
+    <div className="bg-transparent rounded-md">
+      <div className="flex flex-col space-y-4">
 
-      <h2>Transaction Data</h2>
-      <ul>{transactionData.transactionTableData.map(t => (
-        <li key={t.txHash}>
-          {t.status} - {t.txHash.slice(0, 10)}... - From: {t.from.slice(0, 10)}... To: {t.to.slice(0, 10)}...
-        </li>
-      ))}</ul>
+        {/* Transaction Data */}
+        <div>
+          <h2 className="text-white text-lg font-bold mb-2">Transaction Data</h2>
+          <Table className="bg-[#3A2048] rounded-[5px]">
+            <TableHeader className="text-white bg-[#5A3D6A]">
+              <TableRow className="border-transparent rounded-lg text-xs">
+                <TableHead className="text-white">Tx Hash</TableHead>
+                <TableHead className="text-white">From</TableHead>
+                <TableHead className="text-white">To</TableHead>
+                <TableHead className="text-white">Function</TableHead>
+                <TableHead className="text-white">Tx Fee</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="text-white font-semibold">
+              {transactionData.transactionTableData.length > 0 ? (
+                transactionData.transactionTableData.map((tx, index) => (
+                  <TableRow 
+                    key={index} 
+                    className="border-none cursor-pointer hover:bg-[#4A315A]"
+                    onClick={() => handleRowClick(tx.txHash)}
+                  >
+                    <TableCell className="text-xs">{tx.txHash}</TableCell>
+                    <TableCell className="text-xs">{tx.from.slice(0, 10)}...</TableCell>
+                    <TableCell className="text-xs">{tx.to.slice(0, 10)}...</TableCell>
+                    <TableCell className="text-xs">{tx.function}</TableCell>
+                    <TableCell className="text-xs">{tx.txFee}</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-xs">
+                     Currently only support Supra address history.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+      </div>
     </div>
-    );
+  );
 }
 
 export default AddressDetails;

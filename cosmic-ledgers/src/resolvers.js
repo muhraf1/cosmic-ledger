@@ -118,28 +118,40 @@
         try {
           const browser = await puppeteer.launch({ headless: true });
           const page = await browser.newPage();
+          // Changed URL to match the one you provided
           await page.goto(`https://suprascan.io/address/${address}/f?tab=transactions&pageNo=1&rows=10`, { waitUntil: 'networkidle2' });
-  
+      
           const data = await page.evaluate(() => {
-            const rows = Array.from(document.querySelectorAll('table.resizer-table tbody tr'));
+            const rows = Array.from(document.querySelectorAll('tr.hover\\:bg-gray-50'));
             return rows.map(row => {
-              const cells = Array.from(row.querySelectorAll('td')).map(td => td.innerText.trim());
-              return {
-                status: cells[0],
-                txHash: cells[1],
-                block: cells[2],
-                confirmationTime: cells[3],
-                from: cells[4],
-                to: cells[5],
-                function: cells[6],
-                txFee: cells[7]
-              };
-            });
+              const tds = Array.from(row.querySelectorAll('td'));
+              
+              // Find the cell with the transaction hash link
+              const txHashCell = tds.find(td => td.querySelector('a[href^="/tx/"]'));
+              
+              if (txHashCell) {
+                const link = txHashCell.querySelector('a[href^="/tx/"]');
+                const fullHashLink = link.getAttribute('href').split('/tx/')[1].split('/f')[0]; // Extract full txHash from href
+                
+                // Assuming the order of cells remains the same for other data
+                return {
+                  status: tds[0].innerText.trim(),
+                  txHash: fullHashLink, // Here we use the full hash from the href
+                  block: tds[2].innerText.trim(),
+                  confirmationTime: tds[3].innerText.trim(),
+                  from: tds[4].innerText.trim(),
+                  to: tds[5].innerText.trim(),
+                  function: tds[6].innerText.trim(),
+                  txFee: tds[7].innerText.trim()
+                };
+              }
+              return null; // In case no link is found for some reason
+            }).filter(row => row !== null); // Filter out any null entries
           });
-  
+      
           await browser.close();
           return data;
-  
+      
         } catch (error) {
           console.error('Error scraping transaction data:', error.message);
           return [];
@@ -150,7 +162,8 @@
         try {
           const response = await fetch('https://prod-kline-rest.supra.com/latest?trading_pair=supra_usdt', {
             headers: {
-              'x-api-key': process.env.SUPRA_ORACLE_API_KEY // Use the environment variable here
+              // 'x-api-key': process.env.SUPRA_ORACLE_API_KEY // Use the environment variable here
+                  'x-api-key': "356464a14d94ec3c455480727eee9c4fd58233bfd8cdeb1701d2aec132d4d670" // Use the environment variable here
             }
           });
       

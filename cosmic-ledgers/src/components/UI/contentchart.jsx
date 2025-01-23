@@ -195,13 +195,24 @@ const GET_WALLET_HOLDINGS = gql`
 }
 `;
 
+const SCRAPED_TABLE_DATA = gql`
+    query GetScrapedTableData($address: String!) {
+        scrapedTableData(address: $address) {
+            name
+            symbol
+            amount
+            price
+            value
+        }
+    }
+`;
 
 
 
 const Content = () => {
   const [timeRange, setTimeRange] = useState("90d");
   const [totalBalance, setTotalBalance] = useState(0); // State for total balance
-  const { selectedWalletAddress } = useWalletContext();
+  const { selectedWalletAddress, wallets  } = useWalletContext();
 
   const filteredData = chartData.filter((item) => {
     const date = new Date(item.date);
@@ -216,33 +227,48 @@ const Content = () => {
     startDate.setDate(startDate.getDate() - daysToSubtract);
     return date >= startDate;
   });
-  const address = selectedWalletAddress; // Use the selected wallet's address
-  console.log('Address content test:', address);
 
 
-  const { loading: holdingsLoading, error: holdingsError, data: holdingsData } = useQuery(GET_WALLET_HOLDINGS, {
-    variables: { address: selectedWalletAddress },
-    skip: !selectedWalletAddress 
-  });
+
+  // Determine which query to use based on the selected wallet's chain
+  const selectedWallet = wallets.find(wallet => wallet.address === selectedWalletAddress);
 
 
+
+  const { loading: holdingsLoading, error: holdingsError, data: holdingsData } = useQuery(
+    selectedWallet?.chain === 'supra' ? SCRAPED_TABLE_DATA : GET_WALLET_HOLDINGS, 
+    {
+      variables: { address: selectedWalletAddress },
+      skip: !selectedWalletAddress 
+    }
+  );
+
+// supra price
   const { loading: priceLoading, error: priceError, data: priceData } = useQuery(GET_SUPRA_PRICE);
 
 
 
   useEffect(() => {
-    if (holdingsData && holdingsData.walletHoldings) {
-      let balance;
-      if (selectedWalletAddress?.chain === 'supra' && priceData?.getSupraPrice) {
-        balance = calculateTotalBalanceSupra(holdingsData.walletHoldings, priceData.getSupraPrice.price);
-      } else {
-        balance = calculateTotalBalance(holdingsData.walletHoldings);
-      }
-      setTotalBalance(balance);
+  if (holdingsData) {
+    let holdings = selectedWallet?.chain === 'supra' ? holdingsData.scrapedTableData : holdingsData.walletHoldings;
+    if (!holdings || holdings.length === 0) {
+      console.warn('No holdings data available for this address.');
+      setTotalBalance(0);
+      return;
     }
-  }, [holdingsData, priceData, selectedWalletAddress]);
 
-console.log('check chain',selectedWalletAddress?.chain);
+    let balance = 0;
+    if (selectedWallet.chain === 'supra' && priceData?.getSupraPrice) {
+      balance = calculateTotalBalanceSupra(holdings, priceData.getSupraPrice.price);
+    } else {
+      balance = calculateTotalBalance(holdings);
+    }
+    setTotalBalance(balance);
+  }
+}, [holdingsData, priceData, selectedWalletAddress]);
+  
+console.log("check selected wallet ",selectedWallet);
+console.log("check selected wallet chain",selectedWallet?.chain);
 
   const calculateTotalBalance = (holdings) => {
     let total = 0;
@@ -272,18 +298,21 @@ console.log('check chain',selectedWalletAddress?.chain);
   const calculateTotalBalanceSupra = (holdings, supraPrice) => {
     let total = 0;
     for (const holding of holdings) {
-      const amount = parseFloat(holding.amount);
+      let amount = parseFloat(holding.amount);
       if (!isNaN(amount)) {
+        // Use the provided supraPrice for calculation
         total += amount * supraPrice;
+        console.log(`Calculated value for ${holding.symbol}: ${amount * supraPrice}`);
       } else {
-        console.warn('Invalid amount for token:', holding.name, holding.symbol, { amount });
+        console.warn('Could not parse amount for token:', holding.symbol, { amount: holding.amount });
       }
     }
+    console.log('Total balance calculated for Supra:', total);
     return total;
   };
 
   console.log("check balance on content", totalBalance);
-  console.log("check supra price",)
+  console.log("check supra price",priceData?.getSupraPrice?.price);
   // console.log("check total balance",total);
 
   // Styles for glass effect
@@ -311,7 +340,9 @@ console.log('check chain',selectedWalletAddress?.chain);
 
   if (priceError) {
     return <p>Error loading Supra price: {priceError.message}</p>;
-  } 
+  }
+
+
   return (
     <Card className=" py-2 px-4 bg-transparent" style={glassLayer2Styles}>
 
@@ -328,7 +359,7 @@ console.log('check chain',selectedWalletAddress?.chain);
                   style: 'currency',
                   currency: 'USD',
                   minimumFractionDigits: 0,
-                  maximumFractionDigits: 3
+                  maximumFractionDigits: 5
                 })}
               </span>
              
