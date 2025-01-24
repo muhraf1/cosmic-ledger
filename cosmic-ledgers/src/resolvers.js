@@ -195,31 +195,34 @@ dotenv.config();
 
 
 
-      getPriceHistory: async (_, {
-        trading_pair = 'btc_usdt',
-        startDate,
-        endDate,
-        interval = '36000'
-      }) => {
+      getPriceHistory: async (_, { trading_pair, startDate, endDate, interval }) => {
         try {
-          const end = endDate ? new Date(parseInt(endDate)) : new Date();
-          const start = startDate ? new Date(parseInt(startDate)) : subDays(end, 7);
-
-          const response = await axios.get('https://prod-kline-rest.supra.com/history', {
-            params: {
-              trading_pair,
-              startDate: start.getTime().toString(),
-              endDate: end.getTime().toString(),
-              interval
-            },
+          // Construct the URL parameters
+          const params = new URLSearchParams({
+            trading_pair,
+            startDate,
+            endDate,
+            interval
+          });
+      
+          // Construct the full URL
+          const fullUrl = `https://prod-kline-rest.supra.com/history?${params.toString()}`;
+          
+          // Log the URL before executing the request
+          console.log('Fetching price history from:', fullUrl);
+      
+          const response = await axios.get(fullUrl, {
             headers: {
               'x-api-key': process.env.SUPRA_ORACLE_API_KEY
             }
           });
-
+      
+          console.log("Response from API:", response.data); // Log the response data if needed
+      
+          // Map the data to match your GraphQL schema
           return response.data.map(data => ({
-            time: new Date(parseInt(data.time)).toISOString(),
-            timestamp: data.time.toString(),
+            time: data.time,
+            timestamp: data.timestamp,
             open: data.open.toString(),
             high: data.high.toString(),
             low: data.low.toString(),
@@ -227,6 +230,10 @@ dotenv.config();
           }));
         } catch (error) {
           console.error('Failed to fetch price history:', error.message);
+          if (error.response) {
+            console.error('Response status:', error.response.status);
+            console.error('Response data:', error.response.data);
+          }
           return [];
         }
       }

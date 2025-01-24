@@ -75,6 +75,7 @@ const GET_SUPRA_PRICE = gql`
 const VmMenu = () => {
     const [activeSection, setActiveSection] = useState("All");
     const { wallets, selectedWalletAddress } = useWalletContext();
+    const [openedSymbols, setOpenedSymbols] = useState({});
     const [allHoldings, setAllHoldings] = useState([]);
     const { loading: priceLoading, error: priceError, data: priceData } = useQuery(GET_SUPRA_PRICE);
 
@@ -252,21 +253,21 @@ const VmMenu = () => {
         if (!holdings) {
             return <p>No data available for this address.</p>;
         }
-    
+
         // Create a new array for sorting to avoid modifying the original data
         const sortedHoldings = [...holdings].sort((a, b) => {
-            const aValue = selectedWallet?.chain === 'supra' 
-                ? parseFloat(a.amount.replace(/,/g, '')) * priceData?.getSupraPrice?.price 
+            const aValue = selectedWallet?.chain === 'supra'
+                ? parseFloat(a.amount.replace(/,/g, '')) * priceData?.getSupraPrice?.price
                 : parseFloat(a.amount || 0) * (a.price?.price || 0);
-            const bValue = selectedWallet?.chain === 'supra' 
-                ? parseFloat(b.amount.replace(/,/g, '')) * priceData?.getSupraPrice?.price 
+            const bValue = selectedWallet?.chain === 'supra'
+                ? parseFloat(b.amount.replace(/,/g, '')) * priceData?.getSupraPrice?.price
                 : parseFloat(b.amount || 0) * (b.price?.price || 0);
-            
+
             return bValue - aValue; // Sort in descending order
         });
-    
 
-    
+
+
         const sectionHoldings = sortedHoldings.filter(holding =>
             activeSection === "All" || (holding.chain === activeSection || activeSection === 'All')
         );
@@ -373,13 +374,19 @@ const VmMenu = () => {
                                                     </TableCell>
                                                 </TableRow>
                                             </DialogTrigger>
-                                            <DialogContent className="sm:max-w-[425px]">
-                                                <DialogHeader>
-                                                    <DialogTitle>{holding.name}</DialogTitle>
-                                                                                                    {/* Add the Line Chart here */}
-                                                <LineChartComponent />
+                                            <DialogContent
+                                                className="max-w-2xl p-6 glass border-none"
+                                            >                                                <DialogHeader>
+                                                    <DialogTitle className="text-white">{holding.name}</DialogTitle>
+                                                    {/* Add the Line Chart here */}
+                                                    {!openedSymbols[holding.symbol] &&
+                                                        <LineChartComponent
+                                                            symbol={holding.symbol}
+                                                            onOpen={() => setOpenedSymbols(prev => ({ ...prev, [holding.symbol]: true }))}
+                                                        />
+                                                    }
 
-                                                    <DialogDescription>
+                                                    <DialogDescription className="text-white text-md font-semibold">
                                                         Symbol: {holding.symbol}<br />
                                                         Price: ${selectedWallet?.chain === 'supra' ? priceData?.getSupraPrice?.price?.toFixed(5) : holding.price?.price || "N/A"}<br />
                                                         Amount: {holding.amount || "N/A"}<br />
