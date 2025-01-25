@@ -1,8 +1,8 @@
 // walletselect.jsx
 
 import * as React from "react";
-import  Button  from "@/components/ui/button";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/UI/button";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/UI/select";
 import { useWalletContext } from "./WalletContext";
 
 const WalletSelect = () => {
