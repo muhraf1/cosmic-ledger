@@ -14,7 +14,7 @@ import {
     SelectLabel,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select"
+} from "@/components/UI/select"
 import { Search } from "lucide-react";
 
 const TransactionMenu = () => {
