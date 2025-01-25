@@ -1,6 +1,6 @@
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/UI/dialog";
+import { Button } from "@/components/UI/button";
+import { Input } from "@/components/UI/input";
 import { Search } from "lucide-react"; // Assuming you're using Lucide React for icons
 
 function SearchDialog() {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useQuery } from '@apollo/client';
 import { gql } from '@apollo/client';
 import { Separator } from "./separator";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/UI/input";
 import GridSwitch from "./GridSwitch";
 import WalletProvider, { useWalletContext } from "./WalletContext";
 
@@ -13,7 +13,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@/components/UI/dialog";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "./table";
 import {
     Select,
@@ -23,7 +23,7 @@ import {
     SelectLabel,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
+} from "@/components/UI/select";
 import { Search } from "lucide-react";
 
 
