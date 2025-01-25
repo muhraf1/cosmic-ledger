@@ -236,7 +236,52 @@ dotenv.config();
           }
           return [];
         }
-      }
+      },
+
+      // getNetWorthPerformance: async (_, { address, startDate, endDate }) => {
+      //   try {
+      //     const [holdings, priceHistory] = await Promise.all([
+      //       // Fetch current holdings
+      //       this.walletHoldings(_, { address }),
+      //       // Fetch price history for each token in holdings. Here we assume you want daily data
+      //       Promise.all(holdings.map(h => 
+      //         this.getPriceHistory(_, { 
+      //           trading_pair: `${h.symbol}_usdt`, 
+      //           startDate, 
+      //           endDate, 
+      //           interval: '1d' 
+      //         })
+      //       ))
+      //     ]);
+  
+      //     // Calculate net worth for each day
+      //     const netWorthPerDay = {};
+      //     for (let day of priceHistory[0]) {
+      //       const dateKey = format(new Date(day.timestamp), 'yyyy-MM-dd');
+      //       netWorthPerDay[dateKey] = 0;
+            
+      //       for (let i = 0; i < holdings.length; i++) {
+      //         const holding = holdings[i];
+      //         const dayPriceData = priceHistory[i].find(p => format(new Date(p.timestamp), 'yyyy-MM-dd') === dateKey);
+              
+      //         if (dayPriceData) {
+      //           // Convert holding amount to USD value
+      //           netWorthPerDay[dateKey] += parseFloat(holding.amount) * parseFloat(dayPriceData.close);
+      //         }
+      //       }
+      //     }
+  
+      //     // Transform into performance data
+      //     return Object.keys(netWorthPerDay).map(date => ({
+      //       date: date,
+      //       netWorth: netWorthPerDay[date].toFixed(2) // keep up to 2 decimal places
+      //     })).sort((a, b) => new Date(a.date) - new Date(b.date));
+  
+      //   } catch (error) {
+      //     console.error('Error calculating net worth performance:', error);
+      //     return [];
+      //   }
+      // }
     
     }
     

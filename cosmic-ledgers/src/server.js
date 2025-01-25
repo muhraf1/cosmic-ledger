@@ -2,8 +2,12 @@ import express from 'express';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import http from 'http';
 import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import 'dotenv/config';
 import { typeDefs } from './schema.js';
 import { resolvers } from './resolvers.js';
 
@@ -11,35 +15,51 @@ async function startServer() {
   const app = express();
   const httpServer = http.createServer(app);
 
-  // Middleware for JSON parsing (which you already have)
   app.use(express.json());
 
-  // Enable CORS for handling cross-origin requests
-  app.use(cors());
+  // Configure Helmet with CSP for Apollo Sandbox
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "https://embeddable-sandbox.cdn.apollographql.com"],
+        styleSrc: ["'self'", "https://embeddable-sandbox.cdn.apollographql.com"],
+        imgSrc: ["'self'", "data:", "https://apollo-server-landing-page.cdn.apollographql.com"],
+        connectSrc: ["'self'", "https://studio.apollographql.com"],
+      }
+    }
+  }));
 
-  // Configure Apollo Server
+  app.use(morgan('combined'));
+
+  // CORS configuration for Apollo Sandbox
+  app.use(cors({ 
+    origin: process.env.CORS_ORIGIN || '*',
+    optionsSuccessStatus: 200
+  }));
+
   const server = new ApolloServer({
     typeDefs,
     resolvers,
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
+      ApolloServerPluginLandingPageLocalDefault({ embed: true }) // This enables the sandbox
     ],
   });
 
   await server.start();
 
-  // Apply ApolloServer middleware to the /graphql endpoint
   app.use('/graphql', expressMiddleware(server, {
-    context: async ({ req }) => ({ req }), // Optionally, pass request context
+    context: async ({ req }) => ({ req }),
   }));
 
-  // Here we handle any other routes or middleware if needed
-  // app.get('*', (req, res) => {
-  //   res.send('Hello from Apollo Server with Express!');
-  // });
+  app.get('/health', (req, res) => {
+    res.status(200).send('OK');
+  });
 
-  await new Promise(resolve => httpServer.listen({ port: 4000 }, resolve));
-  console.log(`🚀 Server ready at http://localhost:4000/graphql`);
+  const PORT = process.env.PORT || 4000;
+  await new Promise(resolve => httpServer.listen(PORT, resolve));
+  console.log(`🚀 Server ready at http://localhost:${PORT}/graphql`);
 }
 
 startServer().catch(err => {

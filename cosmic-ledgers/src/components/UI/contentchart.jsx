@@ -144,6 +144,7 @@ const chartConfig = {
   },
 };
 
+
 const GET_SUPRA_PRICE = gql`
   query GetSupraPrice {
     getSupraPrice {
@@ -216,8 +217,9 @@ const Content = () => {
 
   const filteredData = chartData.filter((item) => {
     const date = new Date(item.date);
-    const referenceDate = new Date("2024-11-30");
+    const referenceDate = new Date("2024-06-30");
     let daysToSubtract = 90;
+
     if (timeRange === "30d") {
       daysToSubtract = 30;
     } else if (timeRange === "7d") {
@@ -228,7 +230,7 @@ const Content = () => {
     return date >= startDate;
   });
 
-
+// console.log("check chart data ", filteredData);
 
   // Determine which query to use based on the selected wallet's chain
   const selectedWallet = wallets.find(wallet => wallet.address === selectedWalletAddress);
@@ -369,6 +371,8 @@ console.log("check selected wallet chain",selectedWallet?.chain);
 
           </div>
         </div>
+
+        
         {/* select picl date  & toggle chart  */}
         <div className="flex flex-col self-start ">
 
