@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Separator } from "./separator";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/UI/input";
 import { DatePickerWithRange } from "./DatePickerWithRange";
 import { Button } from "./button";
 import SearchDialog from "./searchdialog";
