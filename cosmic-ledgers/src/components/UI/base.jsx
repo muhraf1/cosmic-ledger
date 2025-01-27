@@ -12,6 +12,7 @@ const BaseLayer = ({ children }) => {
         <div className="custom-width mx-auto h-full glass px-10 pb-3">
           <WalletSelect />
           <Content />
+          {children}  {/* Here's where we add the children */}
           <div className="w-full justify-items-end mt-2">
             <img className="h-8 w-auto" src="./src/assets/name_logo.png" />
           </div>

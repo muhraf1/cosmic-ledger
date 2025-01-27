@@ -10,7 +10,7 @@ export default {
   theme: {
     extend: {
       backgroundImage: {
-        'cosmic-texture': "url('/back-ground.png')"  // Remove 'public' from the path
+        'cosmic-texture': "url('/back-ground.png')"
       },
       borderRadius: {
         lg: 'var(--radius)',

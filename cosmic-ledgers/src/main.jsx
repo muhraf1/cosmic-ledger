@@ -4,18 +4,16 @@ import { ApolloProvider, ApolloClient, InMemoryCache } from '@apollo/client';
 import './index.css'; 
 import App from './App.jsx';
 
+// Create Apollo Client for development environment
 const apolloClient = new ApolloClient({
-  uri: process.env.NODE_ENV === 'development'
-    ? 'http://localhost:4000/graphql' 
-    : process.env.REACT_APP_GRAPHQL_API_URL || '',
+  uri: 'http://localhost:4000/graphql',
   cache: new InMemoryCache(),
 });
 
-const client = process.env.NODE_ENV === 'development' ? apolloClient : generateClient();
-
+// Directly use the apolloClient for development
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <ApolloProvider client={client}>
+    <ApolloProvider client={apolloClient}>
       <App />
     </ApolloProvider>
   </StrictMode>
