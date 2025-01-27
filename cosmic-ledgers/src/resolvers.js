@@ -260,6 +260,7 @@ dotenv.config();
       
           // Fetch price history for each token
           console.log('Fetching price history for tokens from', startDate, 'to', endDate);
+          
           const priceHistories = await Promise.all(
             temp_tokens.map(token => {
               console.log('Fetching price history for:', token.symbol);
