@@ -1,0 +1,15 @@
+projects:
+  cosmicledgers:
+    schemaPath: src/graphql/schema.json
+    includes:
+      - src/schema.js
+    excludes:
+      - ./amplify/**
+    extensions:
+      amplify:
+        codeGenTarget: javascript
+        generatedFileName: ''
+        docsFilePath: src
+extensions:
+  amplify:
+    version: 3

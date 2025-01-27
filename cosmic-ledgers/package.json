@@ -8,7 +8,9 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "@apollo/client": "^3.12.6",
@@ -22,6 +24,7 @@
     "@tanstack/react-table": "^8.20.6",
     "apollo-server-express": "^3.13.0",
     "apollo-server-plugin-response-cache": "^3.8.2",
+    "aws-amplify": "^6.12.2",
     "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

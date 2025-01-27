@@ -1,7 +1,6 @@
-// schema.js
-import { gql } from 'apollo-server-express';
-
-  const typeDefs = gql`
+# This "input" configures a global authorization rule to enable public access to
+# all models in this schema. Learn more about authorization rules here: https://docs.amplify.aws/cli/graphql/authorization-rules
+input AMPLIFY { globalAuthRule: AuthRule = { allow: public } } # FOR TESTING ONLY!
 
 
   type Price {
@@ -95,14 +94,14 @@ import { gql } from 'apollo-server-express';
       profit: Profit!
     }
 
-
-  type ScrapedRowTokens {
+    type ScrapedRowTokens {
     name: String!
     symbol: String!
     amount: String!
     price: String!
     value: String!
   }
+
 
   type TransactionRow {
     status: String
@@ -130,11 +129,6 @@ import { gql } from 'apollo-server-express';
       close: String
     }
 
-    type NetWorthPerformance {
-    date: String
-    netWorth: String
-}
-
   type Query {
     walletHoldings(address: String!): [WalletHolding!]!
     nftHoldings(address: String!): [NFTHolding!]!
@@ -142,9 +136,4 @@ import { gql } from 'apollo-server-express';
     transactionTableData(address: String!): [TransactionRow!]!
     getSupraPrice: SupraPrice
     getPriceHistory(trading_pair: String, startDate:String , endDate:String, interval:String): [PriceData!]!
-    getNetWorthPerformance(address: String!, startDate: String!, endDate: String!): [NetWorthPerformance!]!
   }
-
-`;
-
-export { typeDefs };

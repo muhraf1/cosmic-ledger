@@ -266,6 +266,12 @@ const VmMenu = () => {
             return bValue - aValue; // Sort in descending order
         });
 
+        function truncateAddress(address) {
+            if (!address) return "N/A";
+            const length = address.length;
+            if (length <= 10) return address; // If address is short, return it as is
+            return `${address.slice(0, 20)}...${address.slice(length - 10)}`;
+        }
 
 
         const sectionHoldings = sortedHoldings.filter(holding =>
@@ -388,6 +394,7 @@ const VmMenu = () => {
 
                                                     <DialogDescription className="text-white text-md font-semibold">
                                                         Symbol: {holding.symbol}<br />
+                                                        ContractAddress: {holding.contractAddress} <br />
                                                         Price: ${selectedWallet?.chain === 'supra' ? priceData?.getSupraPrice?.price?.toFixed(5) : holding.price?.price || "N/A"}<br />
                                                         Amount: {holding.amount || "N/A"}<br />
                                                         USD Value: {holding.price && holding.amount ? `$${(

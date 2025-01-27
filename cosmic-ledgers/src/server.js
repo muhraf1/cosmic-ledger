@@ -17,7 +17,7 @@ async function startServer() {
 
   app.use(express.json());
 
-  // Configure Helmet with CSP for Apollo Sandbox
+  // Configure Helmet for security headers
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {
@@ -30,11 +30,16 @@ async function startServer() {
     }
   }));
 
-  app.use(morgan('combined'));
+  // Enable detailed logging in development, but keep it minimal in production
+  if (process.env.NODE_ENV === 'development') {
+    app.use(morgan('dev'));
+  } else {
+    app.use(morgan('combined'));
+  }
 
-  // CORS configuration for Apollo Sandbox
-  app.use(cors({ 
-    origin: process.env.CORS_ORIGIN || '*',
+  // CORS configuration; in production, you'll want to lock this down
+  app.use(cors({
+    origin: process.env.NODE_ENV === 'development' ? '*' : process.env.CORS_ORIGIN || '*',
     optionsSuccessStatus: 200
   }));
 

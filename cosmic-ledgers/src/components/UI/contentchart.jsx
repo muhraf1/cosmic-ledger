@@ -145,6 +145,16 @@ const chartConfig = {
 };
 
 
+const GET_NET_WORTH_PERFORMANCE = gql`
+  query GetNetWorthPerformance($address: String!, $startDate: String!, $endDate: String!) {
+    getNetWorthPerformance(address: $address, startDate: $startDate, endDate: $endDate) {
+      date
+      netWorth
+    }
+  }
+`;
+
+
 const GET_SUPRA_PRICE = gql`
   query GetSupraPrice {
     getSupraPrice {
@@ -213,64 +223,102 @@ const SCRAPED_TABLE_DATA = gql`
 const Content = () => {
   const [timeRange, setTimeRange] = useState("90d");
   const [totalBalance, setTotalBalance] = useState(0); // State for total balance
-  const { selectedWalletAddress, wallets  } = useWalletContext();
+  const { selectedWalletAddress, wallets } = useWalletContext();
+  const selectedWallet = wallets.find(wallet => wallet.address === selectedWalletAddress);
 
-  const filteredData = chartData.filter((item) => {
-    const date = new Date(item.date);
-    const referenceDate = new Date("2024-06-30");
-    let daysToSubtract = 90;
+  // const filteredData = chartData.filter((item) => {
 
-    if (timeRange === "30d") {
-      daysToSubtract = 30;
-    } else if (timeRange === "7d") {
-      daysToSubtract = 7;
-    }
-    const startDate = new Date(referenceDate);
-    startDate.setDate(startDate.getDate() - daysToSubtract);
-    return date >= startDate;
-  });
+  //   const date = new Date(item.date);
+  //   const referenceDate = new Date("2024-06-30");
+  //   let daysToSubtract = 90;
 
-// console.log("check chart data ", filteredData);
+  //   if (timeRange === "30d") {
+  //     daysToSubtract = 30;
+  //   } else if (timeRange === "7d") {
+  //     daysToSubtract = 7;
+  //   }
+  //   const startDate = new Date(referenceDate);
+  //   startDate.setDate(startDate.getDate() - daysToSubtract);
+  //   return date >= startDate;
+  // });
+
+  // console.log("check chart data ", filteredData);
 
   // Determine which query to use based on the selected wallet's chain
-  const selectedWallet = wallets.find(wallet => wallet.address === selectedWalletAddress);
 
 
 
   const { loading: holdingsLoading, error: holdingsError, data: holdingsData } = useQuery(
-    selectedWallet?.chain === 'supra' ? SCRAPED_TABLE_DATA : GET_WALLET_HOLDINGS, 
+    selectedWallet?.chain === 'supra' ? SCRAPED_TABLE_DATA : GET_WALLET_HOLDINGS,
     {
       variables: { address: selectedWalletAddress },
-      skip: !selectedWalletAddress 
+      skip: !selectedWalletAddress
     }
   );
 
-// supra price
+  // supra price
   const { loading: priceLoading, error: priceError, data: priceData } = useQuery(GET_SUPRA_PRICE);
 
 
 
-  useEffect(() => {
-  if (holdingsData) {
-    let holdings = selectedWallet?.chain === 'supra' ? holdingsData.scrapedTableData : holdingsData.walletHoldings;
-    if (!holdings || holdings.length === 0) {
-      console.warn('No holdings data available for this address.');
-      setTotalBalance(0);
-      return;
-    }
 
-    let balance = 0;
-    if (selectedWallet.chain === 'supra' && priceData?.getSupraPrice) {
-      balance = calculateTotalBalanceSupra(holdings, priceData.getSupraPrice.price);
-    } else {
-      balance = calculateTotalBalance(holdings);
-    }
-    setTotalBalance(balance);
+  // Calculate end date as today, and start date based on time range
+  const endDate = new Date().toISOString().split('T')[0];
+  let startDate = new Date();
+  switch (timeRange) {
+    case "30d":
+      startDate.setDate(startDate.getDate() - 30);
+      break;
+    case "7d":
+      startDate.setDate(startDate.getDate() - 7);
+      break;
+    default: // 90d
+      startDate.setDate(startDate.getDate() - 90);
   }
-}, [holdingsData, priceData, selectedWalletAddress]);
-  
-console.log("check selected wallet ",selectedWallet);
-console.log("check selected wallet chain",selectedWallet?.chain);
+  startDate = startDate.toISOString().split('T')[0];
+
+  const { loading: performanceLoading, error: performanceError, data: performanceData } = useQuery(
+    GET_NET_WORTH_PERFORMANCE,
+    {
+      variables: { address: selectedWalletAddress, startDate, endDate },
+      skip: !selectedWalletAddress
+    }
+  );
+
+  const netWorthPerformance = performanceData?.getNetWorthPerformance || [];
+
+  console.log("Check NetWorth Performanace Data",performanceData);
+  console.log("Check NetWorth Performanace",netWorthPerformance);
+
+  useEffect(() => {
+    if (netWorthPerformance.length > 0) {
+      setTotalBalance(parseFloat(netWorthPerformance[netWorthPerformance.length - 1].netWorth));
+    } else {
+      setTotalBalance(0);
+    }
+  }, [netWorthPerformance]);
+
+  useEffect(() => {
+    if (holdingsData) {
+      let holdings = selectedWallet?.chain === 'supra' ? holdingsData.scrapedTableData : holdingsData.walletHoldings;
+      if (!holdings || holdings.length === 0) {
+        console.warn('No holdings data available for this address.');
+        setTotalBalance(0);
+        return;
+      }
+
+      let balance = 0;
+      if (selectedWallet.chain === 'supra' && priceData?.getSupraPrice) {
+        balance = calculateTotalBalanceSupra(holdings, priceData.getSupraPrice.price);
+      } else {
+        balance = calculateTotalBalance(holdings);
+      }
+      setTotalBalance(balance);
+    }
+  }, [holdingsData, priceData, selectedWalletAddress]);
+
+  console.log("check selected wallet ", selectedWallet);
+  console.log("check selected wallet chain", selectedWallet?.chain);
 
   const calculateTotalBalance = (holdings) => {
     let total = 0;
@@ -314,7 +362,7 @@ console.log("check selected wallet chain",selectedWallet?.chain);
   };
 
   console.log("check balance on content", totalBalance);
-  console.log("check supra price",priceData?.getSupraPrice?.price);
+  console.log("check supra price", priceData?.getSupraPrice?.price);
   // console.log("check total balance",total);
 
   // Styles for glass effect
@@ -333,6 +381,35 @@ console.log("check selected wallet chain",selectedWallet?.chain);
       <div className="loader-container">
         <div className="loader"></div>
       </div>
+    );
+  }
+
+
+  
+  if (performanceError) {
+    return (
+      <Card className="py-2 px-4 bg-transparent" style={glassLayer2Styles}>
+        <CardHeader>
+          <CardTitle className="text-white/60 italic text-lg">Error</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-white">Error loading net worth performance: {performanceError.message}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Check if there's any data to display
+  if (netWorthPerformance.length === 0) {
+    return (
+      <Card className="py-2 px-4 bg-transparent" style={glassLayer2Styles}>
+        <CardHeader>
+          <CardTitle className="text-white/60 italic text-lg">No Data</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-white">No net worth performance data available for the selected period.</p>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -356,7 +433,7 @@ console.log("check selected wallet chain",selectedWallet?.chain);
           <div className="flex justify-between">
             {/* amount */}
             <div className="flex-col">
-            <span className="font-bold text-2xl text-white">
+              <span className="font-bold text-2xl text-white">
                 {totalBalance.toLocaleString('en-US', {
                   style: 'currency',
                   currency: 'USD',
@@ -364,7 +441,7 @@ console.log("check selected wallet chain",selectedWallet?.chain);
                   maximumFractionDigits: 5
                 })}
               </span>
-             
+
 
             </div>
 
@@ -372,7 +449,7 @@ console.log("check selected wallet chain",selectedWallet?.chain);
           </div>
         </div>
 
-        
+
         {/* select picl date  & toggle chart  */}
         <div className="flex flex-col self-start ">
 
@@ -404,18 +481,15 @@ console.log("check selected wallet chain",selectedWallet?.chain);
         </div>
       </CardHeader>
       <CardContent className="px-2 pt-2  border-none  bg-transparent">
-        <ChartContainer config={chartConfig} className="aspect-auto h-[120px] w-full  bg-transparent">
-          <AreaChart data={filteredData}>
+        <ChartContainer config={{ netWorth: { label: "Net Worth" } }} className="aspect-auto h-[120px] w-full  bg-transparent">
+          <AreaChart data={netWorthPerformance}>
             <defs>
-              <linearGradient id="fillDesktop" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-desktop)" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="var(--color-desktop)" stopOpacity={0.1} />
-              </linearGradient>
-              <linearGradient id="fillMobile" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-mobile)" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="var(--color-mobile)" stopOpacity={0.1} />
+              <linearGradient id="fillNetWorth" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#81638A" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#E0ADF0" stopOpacity={0.1} />
               </linearGradient>
             </defs>
+
             <CartesianGrid vertical={false} strokeOpacity={0.2} />
             <XAxis
               dataKey="date"
@@ -448,8 +522,7 @@ console.log("check selected wallet chain",selectedWallet?.chain);
                 />
               }
             />
-            <Area dataKey="mobile" type="natural" fill="url(#fillMobile)" stroke="var(--color-mobile)" stackId="a" />
-            <Area dataKey="desktop" type="natural" fill="url(#fillDesktop)" stroke="var(--color-desktop)" stackId="a" />
+            <Area dataKey="netWorth" type="natural" fill="url(#fillNetWorth)" stroke="#81638A" />
             {/* <ChartLegend content={<ChartLegendContent />} /> */}
           </AreaChart>
         </ChartContainer>

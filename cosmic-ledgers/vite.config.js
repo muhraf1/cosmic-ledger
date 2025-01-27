@@ -9,6 +9,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  base: '/', // This sets the base path for your app
   build: {
     rollupOptions: {
       output: {
@@ -20,5 +21,6 @@ export default defineConfig({
       },
     },
     chunkSizeWarningLimit: 700, // adjust if needed
+    outDir: 'dist', // Make sure this matches what gh-pages expects
   },
 })
