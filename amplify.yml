@@ -3,14 +3,12 @@ frontend:
   phases:
     preBuild:
       commands:
-        - cd cosmic-ledgers
-        - npm ci --cache .npm --prefer-offline
+        - npm ci 
     build:
       commands:
-        - cd cosmic-ledgers
         - npm run build
   artifacts:
-    baseDirectory: cosmic-ledgers/dist
+    baseDirectory: build
     files:
       - '**/*'
   cache:
