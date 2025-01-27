@@ -3,13 +3,13 @@ import { addDays, format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/UI/button";
+import { Calendar } from "@/components/UI/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@/components/UI/popover";
 
 export function DatePickerWithRange({ className }) {
   const [date, setDate] = React.useState({
