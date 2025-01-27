@@ -7,7 +7,7 @@ import amplifyconfig from './amplifyconfiguration.json';
 import './index.css'; 
 import App from './App.jsx';
 
-Amplify.configure(amplifyconfig);
+// Amplify.configure(amplifyconfig);
 
 const apolloClient = new ApolloClient({
   uri: process.env.NODE_ENV === 'development'
