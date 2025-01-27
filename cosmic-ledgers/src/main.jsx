@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { ApolloProvider, ApolloClient, InMemoryCache } from '@apollo/client';
 import { generateClient } from 'aws-amplify/api';
 import { Amplify } from 'aws-amplify';
-import amplifyconfig from './aws-exports.js';
+import amplifyconfig from './amplifyconfiguration.json';
 import './index.css'; 
 import App from './App.jsx';
 
