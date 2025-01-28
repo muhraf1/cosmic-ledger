@@ -1,6 +1,4 @@
-Here's a re-written version of your README file with improved clarity, formatting, and structure:
 
----
 
 # Cosmic Ledgers - Portfolio Tracker Application
 
