@@ -256,6 +256,8 @@ const Content = () => {
     }
   );
 
+
+  console.log("check holding data",holdingsData);
   // supra price
   const { loading: priceLoading, error: priceError, data: priceData } = useQuery(GET_SUPRA_PRICE);
 
@@ -376,7 +378,9 @@ const Content = () => {
   };
 
 
-  if (holdingsLoading || priceLoading) {
+  // loading 
+
+  if (holdingsLoading || priceLoading || performanceLoading) {
     return (
       <div className="loader-container">
         <div className="loader"></div>
@@ -385,7 +389,23 @@ const Content = () => {
   }
 
 
+  // if (netWorthPerformance.length === 0) {
+  //   return (
+  //     <Card className="py-2 px-4 bg-transparent" style={glassLayer2Styles}>
+  //       <CardHeader>
+  //         <CardTitle className="text-white/60 italic text-lg">No Data</CardTitle>
+  //       </CardHeader>
+  //       <CardContent>
+  //         <p className="text-white">No net worth performance data available for the selected period.</p>
+  //       </CardContent>
+  //     </Card>
+  //   );
+  // }
+
+
   
+// error
+
   if (performanceError) {
     return (
       <Card className="py-2 px-4 bg-transparent" style={glassLayer2Styles}>
@@ -399,20 +419,7 @@ const Content = () => {
     );
   }
 
-  // Check if there's any data to display
-  if (netWorthPerformance.length === 0) {
-    return (
-      <Card className="py-2 px-4 bg-transparent" style={glassLayer2Styles}>
-        <CardHeader>
-          <CardTitle className="text-white/60 italic text-lg">No Data</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-white">No net worth performance data available for the selected period.</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
+  
   if (holdingsError) {
     return <p>Error loading wallet holdings: {holdingsError.message}</p>;
   }
@@ -438,7 +445,7 @@ const Content = () => {
                   style: 'currency',
                   currency: 'USD',
                   minimumFractionDigits: 0,
-                  maximumFractionDigits: 5
+                  maximumFractionDigits: 4
                 })}
               </span>
 
