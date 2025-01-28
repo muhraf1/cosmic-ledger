@@ -143,6 +143,7 @@ import { gql } from 'apollo-server-express';
     getSupraPrice: SupraPrice
     getPriceHistory(trading_pair: String, startDate:String , endDate:String, interval:String): [PriceData!]!
     getNetWorthPerformance(address: String!, startDate: String!, endDate: String!): [NetWorthPerformance!]!
+    getPriceHistoryDialog(trading_pair: String, startDate:String , endDate:String, interval:String): [PriceData!]!
   }
 
 `;

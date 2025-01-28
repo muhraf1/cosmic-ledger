@@ -4,9 +4,9 @@ import { CartesianGrid, Line, LineChart, XAxis, YAxis, Tooltip, ResponsiveContai
 import { gql, useQuery } from '@apollo/client';
 
 
-const GET_PRICE_HISTORY = gql`
-  query GetPriceHistory($trading_pair: String!, $startDate: String!, $endDate: String!, $interval: String!) {
-    getPriceHistory(
+const GET_PRICE_HISTORY_DIALOG = gql`
+  query  getPriceHistoryDialog($trading_pair: String!, $startDate: String!, $endDate: String!, $interval: String!) {
+     getPriceHistoryDialog(
       trading_pair: $trading_pair, 
       startDate: $startDate, 
       endDate: $endDate, 
@@ -33,7 +33,7 @@ export function LineChartComponent({ symbol }) {
   }, [symbol]);
 
   // Use skip to prevent unnecessary calls
-  const { data, loading, error } = useQuery(GET_PRICE_HISTORY, {
+  const { data, loading, error } = useQuery(GET_PRICE_HISTORY_DIALOG, {
     variables: { 
       trading_pair: tradingPair, 
       startDate, 
@@ -47,27 +47,32 @@ export function LineChartComponent({ symbol }) {
 
   // Memoized chart data preparation
   const chartData = useMemo(() => {
-    if (!data?.getPriceHistory) return [];
-    
-    return data.getPriceHistory.map(item => ({
+    if (!data?.getPriceHistoryDialog) return [];
+  
+    // Check if getPriceHistoryDialog is an array or a single object
+    const priceData = Array.isArray(data.getPriceHistoryDialog) 
+      ? data.getPriceHistoryDialog 
+      : [data.getPriceHistoryDialog];
+  
+    return priceData.map(item => ({
       name: format(new Date(parseInt(item.time)), 'MM/dd HH:mm'),
       close: parseFloat(item.close)
     }));
   }, [data]);
 
-  console.log("check chart data")
+  console.log("check chart data - line char comp",data)
 
   if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
+  if (error) return <div>Error from line chart component: {error.message}</div>;
 
   return (
-    <ResponsiveContainer width="95%" height={300}>
+    <ResponsiveContainer className="pl-4" width="90%" height={300}>
       <LineChart data={chartData}>
         <CartesianGrid strokeDasharray="3 3"  vertical={false}/>
         <XAxis dataKey="name" />
         <YAxis 
           domain={['auto', 'auto']} 
-          tickFormatter={(value) => `$${value.toFixed(2)}`}
+          tickFormatter={(value) => `$${value.toFixed(1)}`}
         />
         <Tooltip 
           formatter={(value) => [`$${Number(value).toFixed(4)}`, 'Price']}

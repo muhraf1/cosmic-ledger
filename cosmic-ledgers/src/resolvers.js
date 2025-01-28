@@ -219,9 +219,44 @@
       },
 
 
+      /// price history fo dialog
+      getPriceHistoryDialog: async (_, { trading_pair, startDate, endDate, interval }) => {
+        try {
+          const params = new URLSearchParams({
+            trading_pair,
+            startDate,
+            endDate,
+            interval,
+          });
+      
+          const fullUrl = `https://prod-kline-rest.supra.com/history?${params.toString()}`;
+          console.log('Fetching price history from:', fullUrl);
+      
+          const response = await axios.get(fullUrl, {
+            headers: { 'x-api-key': process.env.SUPRA_ORACLE_API_KEY },
+          });
+      
+          return response.data.map(data => ({
+            time: data.time,
+            timestamp: data.timestamp,
+            close: data.close.toString(),
+          }));
+        } catch (error) {
+          if (error.response && error.response.status === 404) {
+            console.log(`Instrument not found: ${trading_pair}`);
+            return []; // Return an empty array instead of an object
+          }
+      
+          console.error('Failed to fetch price history:', error.message);
+          throw error; // Re-throw other errors to be handled by the parent resolver
+        }
+      },
 
 
 
+
+
+      /// price history for networth
       getPriceHistory: async (_, { trading_pair, startDate, endDate, interval }) => {
         try {
           const params = new URLSearchParams({
@@ -273,6 +308,10 @@
             {
               symbol: 'btc', // Mocked symbol
               amount: '1.5'  // Mocked amount
+            },
+            {
+              symbol: 'eth',
+              amount: '10'
             }
           ];
           console.log('Holdings fetched:', holdings);
