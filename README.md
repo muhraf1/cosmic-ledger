@@ -15,7 +15,7 @@ Follow the steps below to set up and run the application:
 ### Front-End Setup:
 1. Clone the repository:
    ```bash
-   git clone [text](https://github.com/muhraf1/cosmic-ledger.git)
+   git clone https://github.com/muhraf1/cosmic-ledger.git
    ```
 2. Navigate to the project directory:
    ```bash
