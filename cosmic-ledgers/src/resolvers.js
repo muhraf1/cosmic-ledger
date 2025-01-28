@@ -307,7 +307,7 @@
           const holdings = [
             {
               symbol: 'btc', // Mocked symbol
-              amount: '1.5'  // Mocked amount
+              amount: '3'  // Mocked amount
             },
             {
               symbol: 'eth',
