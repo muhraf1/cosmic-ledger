@@ -1,5 +1,3 @@
-
-
 # Cosmic Ledgers - Portfolio Tracker Application
 
 Cosmic Ledgers is a powerful portfolio tracker designed to provide comprehensive insights into crypto assets across various networks and protocols. This platform simplifies portfolio management while offering advanced features for yield optimization.  
@@ -21,13 +19,17 @@ Follow the steps below to set up and run the application:
    ```bash
    cd cosmic-ledgers
    ```
-3. Start the front-end development server:
+3. Install the required dependencies:
+   ```bash
+   npm install
+   ```
+4. Start the front-end development server:
    ```bash
    npm run dev
    ```
 
 ### Back-End Setup:
-4. Open a new terminal, navigate to the same project (cosmic-ledgers) directory, and start the back-end server:
+5. Open a new terminal, navigate to the same project (cosmic-ledgers) directory, and install back-end dependencies, Start the back-end server:
    ```bash
    npm run start
    ```
