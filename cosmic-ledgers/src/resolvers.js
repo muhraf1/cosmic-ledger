@@ -220,7 +220,12 @@
 
 
       /// price history fo dialog
-      getPriceHistoryDialog: async (_, { trading_pair, startDate, endDate, interval }) => {
+      getPriceHistoryDialog: async (_, {
+        trading_pair,
+        startDate,
+        endDate,
+        interval
+      }) => {
         try {
           const params = new URLSearchParams({
             trading_pair,
@@ -228,14 +233,16 @@
             endDate,
             interval,
           });
-      
+
           const fullUrl = `https://prod-kline-rest.supra.com/history?${params.toString()}`;
           console.log('Fetching price history from:', fullUrl);
-      
+
           const response = await axios.get(fullUrl, {
-            headers: { 'x-api-key': process.env.SUPRA_ORACLE_API_KEY },
+            headers: {
+              'x-api-key': process.env.SUPRA_ORACLE_API_KEY
+            },
           });
-      
+
           return response.data.map(data => ({
             time: data.time,
             timestamp: data.timestamp,
@@ -246,7 +253,7 @@
             console.log(`Instrument not found: ${trading_pair}`);
             return []; // Return an empty array instead of an object
           }
-      
+
           console.error('Failed to fetch price history:', error.message);
           throw error; // Re-throw other errors to be handled by the parent resolver
         }
@@ -257,7 +264,12 @@
 
 
       /// price history for networth
-      getPriceHistory: async (_, { trading_pair, startDate, endDate, interval }) => {
+      getPriceHistory: async (_, {
+        trading_pair,
+        startDate,
+        endDate,
+        interval
+      }) => {
         try {
           const params = new URLSearchParams({
             trading_pair,
@@ -265,14 +277,16 @@
             endDate,
             interval,
           });
-      
+
           const fullUrl = `https://prod-kline-rest.supra.com/history?${params.toString()}`;
           console.log('Fetching price history from:', fullUrl);
-      
+
           const response = await axios.get(fullUrl, {
-            headers: { 'x-api-key': process.env.SUPRA_ORACLE_API_KEY },
+            headers: {
+              'x-api-key': process.env.SUPRA_ORACLE_API_KEY
+            },
           });
-      
+
           return {
             symbol: trading_pair.split('_')[0],
             exists: true,
@@ -288,34 +302,45 @@
         } catch (error) {
           if (error.response && error.response.status === 404) {
             console.log(`Instrument not found: ${trading_pair}`);
-            return { symbol: trading_pair.split('_')[0], exists: false, data: [] };
+            return {
+              symbol: trading_pair.split('_')[0],
+              exists: false,
+              data: []
+            };
           }
-      
+
           console.error('Failed to fetch price history:', error.message);
           throw error; // Re-throw other errors to be handled by the parent resolver
         }
       },
-      
 
 
 
 
-      getNetWorthPerformance: async (_, { address, startDate, endDate }) => {
+
+      getNetWorthPerformance: async (_, {
+        address,
+        startDate,
+        endDate
+       }) => {
         try {
           console.log('Fetching holdings for address:', address);
-          // const holdings = await resolvers.Query.walletHoldings(_, { address });
-          const holdings = [
-            {
-              symbol: 'btc', // Mocked symbol
-              amount: '3'  // Mocked amount
-            },
-            {
-              symbol: 'eth',
-              amount: '10'
-            }
-          ];
+          const holdings = await resolvers.Query.walletHoldings(_, {
+            address
+          });
+          //mock data 
+          // const holdings = [
+          //   {
+          //     symbol: 'btc', 
+          //     amount: '3'  
+          //   },
+          //   {
+          //     symbol: 'eth',
+          //     amount: '10'
+          //   }
+          // ];
           console.log('Holdings fetched:', holdings);
-      
+
           if (!holdings || holdings.length === 0) {
             return [{
               date: format(new Date(), 'yyyy-MM-dd'),
@@ -323,7 +348,7 @@
               error: 'No holdings found for the given address.'
             }];
           }
-      
+
           // Filter out holdings with N/A symbols and validate amounts
           const validTokens = holdings
             .filter(holding => holding.symbol !== 'N/A')
@@ -332,9 +357,9 @@
               amount: parseFloat(holding.amount) || 0
             }))
             .filter(token => token.amount > 0);
-      
+
           console.log('Valid tokens for price fetch:', validTokens);
-      
+
           if (validTokens.length === 0) {
             return [{
               date: format(new Date(), 'yyyy-MM-dd'),
@@ -346,7 +371,7 @@
           // Convert startDate and endDate to UNIX milliseconds
           const startTimestamp = new Date(startDate).getTime();
           const endTimestamp = new Date(endDate).getTime();
-      
+
           // Fetch price histories with individual error handling
           console.log('Fetching price history for tokens from', startTimestamp, 'to', endTimestamp);
           const priceHistoriesResults = await Promise.all(
@@ -359,12 +384,12 @@
                   endDate: endTimestamp.toString(),
                   interval: '3600'
                 });
-      
+
                 if (!result.exists) {
                   console.log(`Skipping ${token.symbol} - not found in price feed`);
                   return token;
                 }
-      
+
                 return {
                   token,
                   history: result.data,
@@ -376,47 +401,50 @@
               }
             })
           );
-      
+
           // Filter out failed and skipped tokens
           const validPriceHistories = priceHistoriesResults.filter(
             result => result !== null && result.success && result.history.length > 0
           );
-          
+
           if (validPriceHistories.length === 0) {
-            return [
-              {
-                date: format(new Date(), 'yyyy-MM-dd'),
-                netWorth: "0.00",
-                error: 'No valid price data available for any tokens.',
-              },
-            ];
+            return [{
+              date: format(new Date(), 'yyyy-MM-dd'),
+              netWorth: "0.00",
+              error: 'No valid price data available for any tokens.',
+            }, ];
           }
-      
+
           // Get unique dates from all histories
           const allDates = new Set();
-          validPriceHistories.forEach(({ history }) => {
+          validPriceHistories.forEach(({
+            history
+          }) => {
             history.forEach(day => {
               allDates.add(format(new Date(day.timestamp), 'yyyy-MM-dd'));
             });
           });
           const sortedDates = Array.from(allDates).sort();
-      
+
           // Calculate net worth for each day
           const performanceData = sortedDates.map(date => {
             let dailyNetWorth = 0;
             let availableTokens = 0;
-      
-            validPriceHistories.forEach(({ token, history }) => {
-              const dayPrice = history.find(p => 
+
+            validPriceHistories.forEach(({
+              token,
+              history
+            }) => {
+              const dayPrice = history.find(p =>
                 format(new Date(p.timestamp), 'yyyy-MM-dd') === date
               );
-              
+
               if (dayPrice) {
                 dailyNetWorth += token.amount * parseFloat(dayPrice.close);
                 availableTokens++;
               }
             });
-      
+
             return {
               date,
               netWorth: dailyNetWorth.toFixed(2),
@@ -424,12 +452,12 @@
               totalTokens: validTokens.length
             };
           });
-      
+
           // Filter out days with zero net worth
-          const finalPerformanceData = performanceData.filter(day => 
+          const finalPerformanceData = performanceData.filter(day =>
             parseFloat(day.netWorth) > 0 || day.tokenCount > 0
           );
-      
+
           if (finalPerformanceData.length === 0) {
             return [{
               date: format(new Date(), 'yyyy-MM-dd'),
@@ -437,10 +465,10 @@
               error: 'No days with valid price data found.'
             }];
           }
-      
+
           console.log('Final performance data:', finalPerformanceData);
           return finalPerformanceData;
-      
+
         } catch (error) {
           console.error('Error calculating net worth performance:', error);
           return [{
@@ -451,6 +479,168 @@
         }
       },
 
+      //get supra networth
+      getSupraNetWorthPerformance: async (_, {
+        address,
+        startDate,
+        endDate
+       }) => {
+        try {
+          console.log('Fetching holdings for address:', address);
+          const holdings = await resolvers.Query.scrapedTableData(_, {
+            address
+          });
+          //mock data 
+          // const holdings = [
+          //   {
+          //     symbol: 'btc', 
+          //     amount: '3'  
+          //   },
+          //   {
+          //     symbol: 'eth',
+          //     amount: '10'
+          //   }
+          // ];
+          console.log('Holdings fetched:', holdings);
+
+          if (!holdings || holdings.length === 0) {
+            return [{
+              date: format(new Date(), 'yyyy-MM-dd'),
+              netWorth: "0.00",
+              error: 'No holdings found for the given address.'
+            }];
+          }
+
+          // Filter out holdings with N/A symbols and validate amounts
+          const validTokens = holdings
+            .filter(holding => holding.symbol !== 'N/A')
+            .map(holding => ({
+              symbol: holding.symbol.toLowerCase(),
+              amount: parseFloat(holding.amount) || 0
+            }))
+            .filter(token => token.amount > 0);
+
+          console.log('Valid tokens for price fetch:', validTokens);
+
+          if (validTokens.length === 0) {
+            return [{
+              date: format(new Date(), 'yyyy-MM-dd'),
+              netWorth: "0.00",
+              error: 'No valid tokens found for price tracking.'
+            }];
+          }
+
+          // Convert startDate and endDate to UNIX milliseconds
+          const startTimestamp = new Date(startDate).getTime();
+          const endTimestamp = new Date(endDate).getTime();
+
+          // Fetch price histories with individual error handling
+          console.log('Fetching price history for tokens from', startTimestamp, 'to', endTimestamp);
+          const priceHistoriesResults = await Promise.all(
+            validTokens.map(async token => {
+              try {
+                console.log('Fetching price history for:', token.symbol);
+                const result = await resolvers.Query.getPriceHistory(_, {
+                  trading_pair: `${token.symbol}_usdt`,
+                  startDate: startTimestamp.toString(),
+                  endDate: endTimestamp.toString(),
+                  interval: '3600'
+                });
+
+                if (!result.exists) {
+                  console.log(`Skipping ${token.symbol} - not found in price feed`);
+                  return token;
+                }
+
+                return {
+                  token,
+                  history: result.data,
+                  success: true
+                };
+              } catch (error) {
+                console.error(`Error fetching price history for ${token.symbol}:`, error.message);
+                return null;
+              }
+            })
+          );
+
+          // Filter out failed and skipped tokens
+          const validPriceHistories = priceHistoriesResults.filter(
+            result => result !== null && result.success && result.history.length > 0
+          );
+
+          if (validPriceHistories.length === 0) {
+            return [{
+              date: format(new Date(), 'yyyy-MM-dd'),
+              netWorth: "0.00",
+              error: 'No valid price data available for any tokens.',
+            }, ];
+          }
+
+          // Get unique dates from all histories
+          const allDates = new Set();
+          validPriceHistories.forEach(({
+            history
+          }) => {
+            history.forEach(day => {
+              allDates.add(format(new Date(day.timestamp), 'yyyy-MM-dd'));
+            });
+          });
+          const sortedDates = Array.from(allDates).sort();
+
+          // Calculate net worth for each day
+          const performanceData = sortedDates.map(date => {
+            let dailyNetWorth = 0;
+            let availableTokens = 0;
+
+            validPriceHistories.forEach(({
+              token,
+              history
+            }) => {
+              const dayPrice = history.find(p =>
+                format(new Date(p.timestamp), 'yyyy-MM-dd') === date
+              );
+
+              if (dayPrice) {
+                dailyNetWorth += token.amount * parseFloat(dayPrice.close);
+                availableTokens++;
+              }
+            });
+
+            return {
+              date,
+              netWorth: dailyNetWorth.toFixed(2),
+              tokenCount: availableTokens,
+              totalTokens: validTokens.length
+            };
+          });
+
+          // Filter out days with zero net worth
+          const finalPerformanceData = performanceData.filter(day =>
+            parseFloat(day.netWorth) > 0 || day.tokenCount > 0
+          );
+
+          if (finalPerformanceData.length === 0) {
+            return [{
+              date: format(new Date(), 'yyyy-MM-dd'),
+              netWorth: "0.00",
+              error: 'No days with valid price data found.'
+            }];
+          }
+
+          console.log('Final performance data:', finalPerformanceData);
+          return finalPerformanceData;
+
+        } catch (error) {
+          console.error('Error calculating net worth performance:', error);
+          return [{
+            date: format(new Date(), 'yyyy-MM-dd'),
+            netWorth: "0.00",
+            error: `Calculation error: ${error.message}`
+          }];
+        }
+      },
+      
     }
 
 
@@ -469,12 +659,6 @@
 
 
     // query token latest price - source: supra oracel API
-
-
-
-
-
-
 
 
 

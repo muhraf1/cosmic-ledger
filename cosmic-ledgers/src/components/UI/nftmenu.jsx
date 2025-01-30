@@ -106,9 +106,9 @@ const GET_NFT_HOLDINGS = gql`
         // Sections array
         const sections = [
             "All",
-            "EVM",
-            "SVM",
-            "Move"
+            // "EVM",
+            // "SVM",
+            // "Move"
         ];
         // Dummy data for chain information
         const chainData = {

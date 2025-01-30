@@ -61,6 +61,15 @@ const GET_NET_WORTH_PERFORMANCE = gql`
   }
 `;
 
+const GET_SUPRA_NET_WORTH_PERFORMANCE = gql`
+  query GetSupraNetWorthPerformance($address: String!, $startDate: String!, $endDate: String!) {
+    getSupraNetWorthPerformance(address: $address, startDate: $startDate, endDate: $endDate) {
+      date
+      netWorth
+    }
+  }
+`;
+
 
 const GET_SUPRA_PRICE = gql`
   query GetSupraPrice {
@@ -128,7 +137,7 @@ const SCRAPED_TABLE_DATA = gql`
 
 
 const Content = () => {
-  const [activeChartType, setActiveChartType] = useState('bar');  
+  const [activeChartType, setActiveChartType] = useState('bar');
   const [timeRange, setTimeRange] = useState("90d");
   const [totalBalance, setTotalBalance] = useState(0); // State for total balance
   const { selectedWalletAddress, wallets } = useWalletContext();
@@ -165,7 +174,7 @@ const Content = () => {
   );
 
 
-  console.log("check holding data",holdingsData);
+  console.log("check holding data", holdingsData);
   // supra price
   const { loading: priceLoading, error: priceError, data: priceData } = useQuery(GET_SUPRA_PRICE);
 
@@ -187,22 +196,57 @@ const Content = () => {
   }
   startDate = startDate.toISOString().split('T')[0];
 
-  const { loading: performanceLoading, error: performanceError, data: performanceData } = useQuery(
-    GET_NET_WORTH_PERFORMANCE,
+
+
+
+  const {
+    loading: performanceLoading,
+    error: performanceError,
+    data: performanceData
+  } = useQuery(
+    selectedWallet?.chain === 'supra'
+      ? GET_SUPRA_NET_WORTH_PERFORMANCE
+      : GET_NET_WORTH_PERFORMANCE,
     {
-      variables: { address: selectedWalletAddress, startDate, endDate },
+      variables: {
+        address: selectedWalletAddress,
+        startDate,
+        endDate
+      },
       skip: !selectedWalletAddress
     }
   );
 
-  const netWorthPerformance = performanceData?.getNetWorthPerformance || [];
+  // fetch data for net worth performance
+  // const { loading: performanceLoading, error: performanceError, data: performanceData } = useQuery(
+  //   GET_NET_WORTH_PERFORMANCE,
+  //   {
+  //     variables: { address: selectedWalletAddress, startDate, endDate },
+  //     skip: !selectedWalletAddress
+  //   }
+  // );
 
-  console.log("Check NetWorth Performanace Data",performanceData);
-  console.log("Check NetWorth Performanace",netWorthPerformance);
+
+
+
+  const netWorthPerformance = selectedWallet?.chain === 'supra'
+    ? performanceData?.getSupraNetWorthPerformance || []
+    : performanceData?.getNetWorthPerformance || [];
+
+  console.log("detect chain address", selectedWallet);
+
+  console.log("Check NetWorth Performanace Data", performanceData);
+  console.log("Check NetWorth Performanace", netWorthPerformance);
 
   useEffect(() => {
     if (netWorthPerformance.length > 0) {
-      setTotalBalance(parseFloat(netWorthPerformance[netWorthPerformance.length - 1].netWorth));
+      const latestPerformance = netWorthPerformance[netWorthPerformance.length - 1];
+      if (!latestPerformance.error) {
+        setTotalBalance(parseFloat(latestPerformance.netWorth));
+      } else {
+        console.error('Performance data error:', latestPerformance.error);
+        setTotalBalance(0);
+      }
     } else {
       setTotalBalance(0);
     }
@@ -310,9 +354,9 @@ const Content = () => {
   //   );
   // }
 
+  // 
 
-  
-// error
+  // error
 
   if (performanceError) {
     return (
@@ -327,7 +371,7 @@ const Content = () => {
     );
   }
 
-  
+
   if (holdingsError) {
     return <p>Error loading wallet holdings: {holdingsError.message}</p>;
   }
@@ -385,23 +429,23 @@ const Content = () => {
             </SelectContent>
           </Select>
           <div className="text-right pt-5">
-          <ChartSwitch
-  onSwitch={(type) => {
-    setActiveChartType(type);
-  }}
-  defaultType="bar"
-/>
+            <ChartSwitch
+              onSwitch={(type) => {
+                setActiveChartType(type);
+              }}
+              defaultType="bar"
+            />
           </div>
         </div>
       </CardHeader>
       <CardContent className="px-2 pt-2  border-none  bg-transparent">
-      <ChartDisplay 
-  data={netWorthPerformance} 
-  chartType={activeChartType === 'bar' ? 'area' : 'pie'}
-  holdingsData={holdingsData}
-  selectedWallet={selectedWallet}
-  supraPrice={priceData?.getSupraPrice?.price}
-/>
+        <ChartDisplay
+          data={netWorthPerformance}
+          chartType={activeChartType === 'bar' ? 'area' : 'pie'}
+          holdingsData={holdingsData}
+          selectedWallet={selectedWallet}
+          supraPrice={priceData?.getSupraPrice?.price}
+        />
         <Navbar ></Navbar>
       </CardContent>
 

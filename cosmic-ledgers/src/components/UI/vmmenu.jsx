@@ -119,7 +119,7 @@ const VmMenu = () => {
     console.log("fetcing data", data);
     // Sections array
     // Sections array
-    const sections = ["All", "EVM", "SVM", "Move"];
+    const sections = ["All"];
 
 
     // Helper function to categorize holdings by chain
