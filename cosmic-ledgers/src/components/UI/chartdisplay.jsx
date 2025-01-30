@@ -74,6 +74,7 @@ const ChartDisplay = ({ data, chartType, holdingsData, selectedWallet, supraPric
 
       if (processedHoldings.length === 0) {
         return (
+
           <Alert className="w-full">
             <AlertDescription>
               No valid holdings found to display.
@@ -177,6 +178,7 @@ const ChartDisplay = ({ data, chartType, holdingsData, selectedWallet, supraPric
 
     if (processedData.length === 0) {
       return (
+        
         <Alert className="w-full">
           <AlertDescription>
             No valid net worth data available to display.

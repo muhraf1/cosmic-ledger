@@ -46,7 +46,7 @@ const WalletSelect = () => {
       </div>
       {/* age of wallet */}
       <div>
-        <Button className="bg-[#8C4FAD]">700 Days</Button>
+        {/* <Button className="bg-[#8C4FAD]">700 Days</Button> */}
       </div>
     </div>
   );
