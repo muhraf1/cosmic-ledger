@@ -4,6 +4,8 @@ Cosmic Ledgers is a powerful Multi-VM portfolio tracker designed to provide comp
 
 Introduction Video : https://www.youtube.com/watch?v=OW5H9kzkGVU
 
+Figma Page : https://www.figma.com/design/WHlOrwRL2mebxR8E4six43/Cosmic-Ledgers?node-id=0-1&t=hFG1Rr6anypWasxp-1
+
 
 **Built for the SUPRA Movers Hackathon**
 
