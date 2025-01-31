@@ -1,6 +1,6 @@
 # Cosmic Ledgers - Portfolio Tracker Application
 
-Cosmic Ledgers is a powerful portfolio tracker designed to provide comprehensive insights into crypto assets across various networks and protocols. This platform simplifies portfolio management while offering advanced features for yield optimization.  
+Cosmic Ledgers is a powerful Multi-VM portfolio tracker designed to provide comprehensive insights into crypto assets across various networks and protocols. This platform simplifies portfolio management while offering advanced features. 
 
 **Built for the SUPRA Movers Hackathon**
 
