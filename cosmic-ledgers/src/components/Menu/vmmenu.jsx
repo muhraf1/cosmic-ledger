@@ -1,55 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Separator } from "./separator";
+import { Separator } from "../UI/separator";
 import { useQuery, gql } from '@apollo/client'; // Assuming Apollo Client is set up in your project
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "./table"; // Assuming you're using a UI component library like Radix UI for tables
-import WalletProvider, { useWalletContext } from "./WalletContext";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./dialog";
-import LineChartComponent from "./LineChartComponent"; // Import the LineChartComponent
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../UI/table"; // Assuming you're using a UI component library like Radix UI for tables
+import WalletProvider, { useWalletContext } from "../UI/WalletContext";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../UI/dialog";
+import LineChartComponent from "../UI/LineChartComponent"; // Import the LineChartComponent
 
 // Define the GraphQL query for fetching wallet holdings
-const GET_WALLET_HOLDINGS = gql`
- query WalletHoldings($address: String!) {
-  walletHoldings(address: $address) {
-    owner
-    cmc_id
-    cg_id
-    cmc_slug
-    name
-    symbol
-    logo
-    amount
-    amountRaw
-    balance
-    contractAddress
-    contractDecimals
-    rate
-    price {
-      price
-      symbol
-      decimal
-      source
-    }
-    last_24h_price {
-      symbol
-      price
-      timestamp
-      confidence
-      source
-    }
-    avgCost
-    last_transferred_at
-    positionId
-    category
-    sector
-    rank
-    positionType
-    chain
-    is_spam
-  }
-}
-`;
 
 
+
+// This query has a resolver
 const DUNE_WALLET_HOLDINGS = gql`
   query DuneWalletHoldings($address: String!) {
     duneWalletHoldings(address: $address) {
@@ -68,53 +29,14 @@ const DUNE_WALLET_HOLDINGS = gql`
   }
 `;
 
-const SCRAPED_TABLE_DATA = gql`
-    query GetScrapedTableData($address: String!) {
-        scrapedTableData(address: $address) {
-            name
-            symbol
-            amount
-            price
-            value
-        }
-    }
-`;
-
-const GET_SUPRA_PRICE = gql`
-    query GetSupraPrice {
-        getSupraPrice {
-            price
-            timestamp
-        }
-    }
-`;
-
-
 
 const VmMenu = () => {
     const [activeSection, setActiveSection] = useState("All");
     const { wallets, selectedWalletAddress } = useWalletContext();
     const [openedSymbols, setOpenedSymbols] = useState({});
     const [allHoldings, setAllHoldings] = useState([]);
-    const { loading: priceLoading, error: priceError, data: priceData } = useQuery(GET_SUPRA_PRICE);
+  
 
-
-
-    // useEffect(() => {
-    //     if (selectedWalletAddress === null) { // 'All Wallet' is selected
-    //         const fetchAllHoldings = async () => {
-    //             const allHoldings = [];
-    //             for (const wallet of wallets) {
-    //                 const { data } = await useQuery(GET_WALLET_HOLDINGS, { variables: { address: wallet.address } });
-    //                 if (data?.walletHoldings) {
-    //                     allHoldings.push(...data.walletHoldings);
-    //                 }
-    //             }
-    //             setAllHoldings(allHoldings);
-    //         };
-    //         fetchAllHoldings();
-    //     }
-    // }, [selectedWalletAddress, wallets]);
 
 
     useEffect(() => {
@@ -145,17 +67,12 @@ const VmMenu = () => {
     const selectedWallet = wallets.find(wallet => wallet.address === selectedWalletAddress);
     // const query = selectedWallet?.chain === 'supra' ? SCRAPED_TABLE_DATA : GET_WALLET_HOLDINGS;
 
-    const query = selectedWallet?.chain === 'supra' ? SCRAPED_TABLE_DATA : DUNE_WALLET_HOLDINGS;
 
-    const { loading, error, data } = useQuery(query, {
+    const { loading, error, data } = useQuery(DUNE_WALLET_HOLDINGS, {
         variables: { address: address },
         skip: !address // Skip the query if no address is provided
     });
 
-    // const { loading, error, data } = useQuery(GET_WALLET_HOLDINGS, {
-    //     variables: { address: address },
-    //     skip: !address // Skip the query if no address is provided
-    // });
 
     console.log("fetcing data", data);
     // Sections array
@@ -164,15 +81,7 @@ const VmMenu = () => {
 
 
     // Helper function to categorize holdings by chain
-    const categorizeHoldings = (holdings) => {
-        return holdings.reduce((acc, holding) => {
-            const chain = holding.chain || 'Unknown'; // Fallback if chain is not provided
-            if (!acc[chain]) acc[chain] = [];
-            acc[chain].push(holding);
-            return acc;
-        }, { All: holdings });
-    };
-
+   
 
     const calculateTotalBalance = (holdings) => {
         let total = 0;
@@ -187,7 +96,7 @@ const VmMenu = () => {
         return total;
     };
 
-    const totalBalance = calculateTotalBalance(data?.walletHoldings || data?.scrapedTableData || []);
+
     // Use effect to process data when it changes
 
     // Dummy data for chain information
@@ -210,115 +119,81 @@ const VmMenu = () => {
         ]
     };
 
-    const protocolData = {
-        "All": [
-            {
-                protocollogo: "./src/assets/wallet_logo.png", protocolname: "Wallet", amount: "$5,000", token: [
-                    { ticker: "Sup", tickerlogo: "./src/assets/supra_logo.png", price: "$1", Amount: "2500", USDvalue: "$1500" },
-                    { ticker: "ETH", tickerlogo: "./src/assets/eth_logo.png", price: "$3000", Amount: "0.43", USDvalue: "$1300" },
-                    { ticker: "WIF", tickerlogo: "./src/assets/wif_logo.png", price: "$1", Amount: "200", USDvalue: "$200" },
-                    { ticker: "SOL", tickerlogo: "./src/assets/solana_logo.png", price: "$190", Amount: "5,26", USDvalue: "$1000" },
-                    { ticker: "SUI", tickerlogo: "./src/assets/sui_logo.png", price: "$4,52", Amount: "221,2", USDvalue: "$1000" },
+    // const protocolData = {
+    //     "All": [
+    //         {
+    //             protocollogo: "./src/assets/wallet_logo.png", protocolname: "Wallet", amount: "$5,000", token: [
+    //                 { ticker: "Sup", tickerlogo: "./src/assets/supra_logo.png", price: "$1", Amount: "2500", USDvalue: "$1500" },
+    //                 { ticker: "ETH", tickerlogo: "./src/assets/eth_logo.png", price: "$3000", Amount: "0.43", USDvalue: "$1300" },
+    //                 { ticker: "WIF", tickerlogo: "./src/assets/wif_logo.png", price: "$1", Amount: "200", USDvalue: "$200" },
+    //                 { ticker: "SOL", tickerlogo: "./src/assets/solana_logo.png", price: "$190", Amount: "5,26", USDvalue: "$1000" },
+    //                 { ticker: "SUI", tickerlogo: "./src/assets/sui_logo.png", price: "$4,52", Amount: "221,2", USDvalue: "$1000" },
 
 
-                ]
-            },
-            {
-                protocollogo: "./src/assets/supra_logo.png", protocolname: "Delegation Pool 0", amount: "$3,500", token: [
-                    { ticker: "Sup", tickerlogo: "./src/assets/supra_logo.png", price: "3300 SUP", Amount: "200 SUP", USDvalue: "$3500" },
+    //             ]
+    //         },
+    //         {
+    //             protocollogo: "./src/assets/supra_logo.png", protocolname: "Delegation Pool 0", amount: "$3,500", token: [
+    //                 { ticker: "Sup", tickerlogo: "./src/assets/supra_logo.png", price: "3300 SUP", Amount: "200 SUP", USDvalue: "$3500" },
 
-                ]
-            },
-            {
-                protocollogo: "./src/assets/aave_logo.png", protocolname: "AAVE", amount: "$700", token: [
-                    { ticker: "USDC Bridged + ETH", tickerlogo: "./src/assets/usdc_eth_logo.png", price: "600 USDC +0,03 ETH", Amount: "3 USDC 0.00015 ETH", USDvalue: "$704" },
+    //             ]
+    //         },
+    //         {
+    //             protocollogo: "./src/assets/aave_logo.png", protocolname: "AAVE", amount: "$700", token: [
+    //                 { ticker: "USDC Bridged + ETH", tickerlogo: "./src/assets/usdc_eth_logo.png", price: "600 USDC +0,03 ETH", Amount: "3 USDC 0.00015 ETH", USDvalue: "$704" },
 
-                ]
-            },
-            {
-                protocollogo: "./src/assets/orca_logo.png", protocolname: "ORCA", amount: "$800", token: [
-                    { ticker: "JUP + SOLANA", tickerlogo: "./src/assets/jup_sol_logo.png", price: "3 SOL 28,75 JUP", Amount: "0,0024 SOL 2,3 JUP", USDvalue: "$803" },
+    //             ]
+    //         },
+    //         {
+    //             protocollogo: "./src/assets/orca_logo.png", protocolname: "ORCA", amount: "$800", token: [
+    //                 { ticker: "JUP + SOLANA", tickerlogo: "./src/assets/jup_sol_logo.png", price: "3 SOL 28,75 JUP", Amount: "0,0024 SOL 2,3 JUP", USDvalue: "$803" },
 
-                ]
-            },
+    //             ]
+    //         },
 
-        ],
-        "EVM": [
-            {
-                protocollogo: "./src/assets/wallet_logo.png", protocolname: "Wallet", amount: "$1,300", token: [
-                    { ticker: "ETH", tickerlogo: "./src/assets/eth_logo.png", price: "$3000", Amount: "0.43", USDvalue: "$1300" },
+    //     ],
+    //     "EVM": [
+    //         {
+    //             protocollogo: "./src/assets/wallet_logo.png", protocolname: "Wallet", amount: "$1,300", token: [
+    //                 { ticker: "ETH", tickerlogo: "./src/assets/eth_logo.png", price: "$3000", Amount: "0.43", USDvalue: "$1300" },
 
-                ]
-            },
+    //             ]
+    //         },
 
-            {
-                protocollogo: "./src/assets/aave_logo.png", protocolname: "AAVE", amount: "$700", token: [
-                    { ticker: "USDC Bridged + ETH", tickerlogo: "./src/assets/usdc_eth_logo.png", price: "600 USDC +0,03 ETH", Amount: "3 USDC 0.00015 ETH", USDvalue: "$704" },
+    //         {
+    //             protocollogo: "./src/assets/aave_logo.png", protocolname: "AAVE", amount: "$700", token: [
+    //                 { ticker: "USDC Bridged + ETH", tickerlogo: "./src/assets/usdc_eth_logo.png", price: "600 USDC +0,03 ETH", Amount: "3 USDC 0.00015 ETH", USDvalue: "$704" },
 
-                ]
-            },
+    //             ]
+    //         },
 
-        ],
-        "SVM": [
-            {
-                protocollogo: "./src/assets/wallet_logo.png", protocolname: "Wallet", amount: "$2,000", token: [
-                    { ticker: "WIF", tickerlogo: "./src/assets/wif_logo.png", price: "$1", Amount: "200", USDvalue: "$200" },
-                    { ticker: "SOL", tickerlogo: "./src/assets/solana_logo.png", price: "$190", Amount: "5,26", USDvalue: "$1000" },
+    //     ],
+    //     "SVM": [
+    //         {
+    //             protocollogo: "./src/assets/wallet_logo.png", protocolname: "Wallet", amount: "$2,000", token: [
+    //                 { ticker: "WIF", tickerlogo: "./src/assets/wif_logo.png", price: "$1", Amount: "200", USDvalue: "$200" },
+    //                 { ticker: "SOL", tickerlogo: "./src/assets/solana_logo.png", price: "$190", Amount: "5,26", USDvalue: "$1000" },
 
-                ]
-            },
-            {
-                protocollogo: "./src/assets/orca_logo.png", protocolname: "ORCA", amount: "$800", token: [
-                    { ticker: "JUP + SOLANA", tickerlogo: "./src/assets/jup_sol_logo.png", price: "3 SOL 28,75 JUP", Amount: "0,0024 SOL 2,3 JUP", USDvalue: "$803" },
+    //             ]
+    //         },
+    //         {
+    //             protocollogo: "./src/assets/orca_logo.png", protocolname: "ORCA", amount: "$800", token: [
+    //                 { ticker: "JUP + SOLANA", tickerlogo: "./src/assets/jup_sol_logo.png", price: "3 SOL 28,75 JUP", Amount: "0,0024 SOL 2,3 JUP", USDvalue: "$803" },
 
-                ]
-            }
-        ],
-        "Move": [
-            {
-                protocollogo: "./src/assets/wallet_logo.png", protocolname: "Wallet", amount: "$1,000", token: [
-                    { ticker: "SUI", tickerlogo: "./src/assets/sui_logo.png", price: "$4,52", Amount: "221,2", USDvalue: "$1000" }
-                ]
-            }
-        ]
-    };
+    //             ]
+    //         }
+    //     ],
+    //     "Move": [
+    //         {
+    //             protocollogo: "./src/assets/wallet_logo.png", protocolname: "Wallet", amount: "$1,000", token: [
+    //                 { ticker: "SUI", tickerlogo: "./src/assets/sui_logo.png", price: "$4,52", Amount: "221,2", USDvalue: "$1000" }
+    //             ]
+    //         }
+    //     ]
+    // };
 
     const renderSectionContent = () => {
-        if (loading || priceLoading) return <p>Loading...</p>;
-        if (error || priceError) return <p>Error: {(error || priceError).message}</p>;
-
-        // const data = chainData[activeSection] || [];
-        // const dataprotocol = protocolData[activeSection] || [];
-        // Determine the data format based on which query was used
-        let holdings = selectedWallet?.chain === 'supra' ? data?.scrapedTableData : data?.walletHoldings;
-        if (!holdings) {
-            return <p>No data available for this address.</p>;
-        }
-
-        // Create a new array for sorting to avoid modifying the original data
-        // const sortedHoldings = [...holdings].sort((a, b) => {
-        //     const aValue = selectedWallet?.chain === 'supra'
-        //         ? parseFloat(a.amount.replace(/,/g, '')) * priceData?.getSupraPrice?.price
-        //         : parseFloat(a.amount || 0) * (a.price?.price || 0);
-        //     const bValue = selectedWallet?.chain === 'supra'
-        //         ? parseFloat(b.amount.replace(/,/g, '')) * priceData?.getSupraPrice?.price
-        //         : parseFloat(b.amount || 0) * (b.price?.price || 0);
-
-        //     return bValue - aValue; 
-        // });
-
-
-        const sortedHoldings = [...holdings].sort((a, b) => {
-            const aValue = selectedWallet?.chain === 'supra'
-                ? parseFloat(a.amount.replace(/,/g, '')) * priceData?.getSupraPrice?.price
-                : parseFloat(a.amount || 0) * parseFloat(a.priceUsd || 0);
-            const bValue = selectedWallet?.chain === 'supra'
-                ? parseFloat(b.amount.replace(/,/g, '')) * priceData?.getSupraPrice?.price
-                : parseFloat(b.amount || 0) * parseFloat(b.priceUsd || 0);
-
-            return bValue - aValue;
-        });
-
+       
 
 
 
@@ -330,8 +205,10 @@ const VmMenu = () => {
         }
 
 
-        const sectionHoldings = sortedHoldings.filter(holding =>
-            activeSection === "All" || (holding.chain === activeSection || activeSection === 'All')
+        // Use data from the GraphQL query instead of sortedHoldings
+        const holdings = selectedWalletAddress ? data?.duneWalletHoldings || [] : allHoldings;
+        const sectionHoldings = holdings.filter(holding =>
+            activeSection === "All" || (holding.chain === activeSection)
         );
 
         switch (activeSection) {
@@ -413,35 +290,35 @@ const VmMenu = () => {
                                                             <span className="text-xs">{holding.symbol || "N/A"}</span>
                                                         </div>
                                                     </TableCell>
-                                                    {/* <TableCell className="text-xs">
-                                                        {selectedWallet?.chain === 'supra' ?
-                                                            `$${priceData?.getSupraPrice?.price?.toFixed(5) || "N/A"}` :
-                                                            (holding.price?.price ? `$${holding.price.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "N/A")
-                                                        }
-                                                    </TableCell> */}
+                                                 
 
 
                                                     <TableCell className="text-xs">
                                                         {selectedWallet?.chain === 'supra'
                                                             ? `$${priceData?.getSupraPrice?.price?.toFixed(5) || "N/A"}`
-                                                            : `$${parseFloat(holding.priceUsd || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                                            : `$${Number(parseFloat(holding.priceUsd || 0)).toLocaleString('en-US', {
+                                                                minimumFractionDigits: 2,
+                                                                maximumFractionDigits: 2,
+                                                                notation: 'compact',
+                                                                compactDisplay: 'short'
+                                                              })}`
                                                         }
                                                     </TableCell>
 
                                                     <TableCell className="text-xs">
-                                                        {holding.amount ? holding.amount.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : "N/A"}
+                                                        {Number(holding.amount || 0).toLocaleString('en-US', { 
+                                                            minimumFractionDigits: 1,
+                                                            maximumFractionDigits: 1,
+                                                            useGrouping: true
+                                                        })}
                                                     </TableCell>
                                                     <TableCell className="text-right text-xs">
-                                                        {holding.price && holding.amount ? `$${(
-                                                            parseFloat(
-                                                                selectedWallet?.chain === 'supra'
-                                                                    ? holding.amount.replace(/,/g, '')
-                                                                    : holding.amount
-                                                            ) * (selectedWallet?.chain === 'supra' ? priceData?.getSupraPrice?.price : holding.price.price)
-                                                        ).toLocaleString('en-US', {
+                                                        ${Number(parseFloat(holding.valueUsd || 0)).toLocaleString('en-US', {
                                                             minimumFractionDigits: 2,
-                                                            maximumFractionDigits: 3
-                                                        })}` : "N/A"}
+                                                            maximumFractionDigits: 2,
+                                                            notation: 'compact',
+                                                            compactDisplay: 'short'
+                                                        })}
                                                     </TableCell>
                                                 </TableRow>
                                             </DialogTrigger>

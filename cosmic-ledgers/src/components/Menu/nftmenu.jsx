@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useQuery } from '@apollo/client';
 import { gql } from '@apollo/client';
-import { Separator } from "./separator";
+import { Separator } from "../UI/separator";
 import { Input } from "@/components/UI/input";
-import GridSwitch from "./GridSwitch";
-import WalletProvider, { useWalletContext } from "./WalletContext";
-import NftFilter from "./nftfilter";
+import GridSwitch from "../UI/GridSwitch";
+import WalletProvider, { useWalletContext } from "../UI/WalletContext";
+import NftFilter from "../UI/nftfilter";
 
 import {
     Dialog,
@@ -15,7 +15,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/UI/dialog";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "./table";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../UI/table";
 import {
     Select,
     SelectContent,

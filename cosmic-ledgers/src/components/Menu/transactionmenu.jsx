@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { Separator } from "./separator";
+import { Separator } from "../UI/separator";
 import { Input } from "@/components/UI/input";
-import { DatePickerWithRange } from "./DatePickerWithRange";
-import { Button } from "./button";
-import SearchDialog from "./searchdialog";
+import { DatePickerWithRange } from "../UI/DatePickerWithRange";
+import { Button } from "../UI/button";
+import SearchDialog from "../UI/searchdialog";
 
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "./table"; // Assuming you're using a UI component library like Radix UI for tables
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../UI/table"; // Assuming you're using a UI component library like Radix UI for tables
 import {
     Select,
     SelectContent,

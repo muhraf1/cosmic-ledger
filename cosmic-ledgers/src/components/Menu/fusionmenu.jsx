@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button } from "./button";
+import { Button } from "../UI/button";
 import { Input } from "@/components/UI/input"
 import {
   Dialog,
@@ -9,8 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "./dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "./select";
+} from "../UI/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "../UI/select";
 
 const FusionMenus = ({ wallets, addWallet, removeWallet }) => {
   const [newWallet, setNewWallet] = useState({ address: '', chain: 'supra' });

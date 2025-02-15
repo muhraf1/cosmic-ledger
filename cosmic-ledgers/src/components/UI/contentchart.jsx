@@ -52,86 +52,57 @@ const chartConfig = {
 };
 
 
-const GET_NET_WORTH_PERFORMANCE = gql`
-  query GetNetWorthPerformance($address: String!, $startDate: String!, $endDate: String!) {
-    getNetWorthPerformance(address: $address, startDate: $startDate, endDate: $endDate) {
-      date
-      netWorth
+// Hardcoded data for testing
+const MOCK_NET_WORTH_PERFORMANCE = [
+  { date: '2024-01-01', netWorth: 10000 },
+  { date: '2024-01-15', netWorth: 12000 },
+  { date: '2024-02-01', netWorth: 11500 },
+  { date: '2024-02-15', netWorth: 13000 },
+  { date: '2024-03-01', netWorth: 14500 },
+  { date: '2024-03-15', netWorth: 15000 },
+];
+
+const MOCK_HOLDINGS_DATA = {
+  walletHoldings: [
+    {
+      name: "Bitcoin",
+      symbol: "BTC",
+      amount: "0.5",
+      price: { price: 45000 },
+      value: 22500
+    },
+    {
+      name: "Ethereum",
+      symbol: "ETH",
+      amount: "2.0",
+      price: { price: 2500 },
+      value: 5000
     }
-  }
-`;
+  ]
+};
 
-const GET_SUPRA_NET_WORTH_PERFORMANCE = gql`
-  query GetSupraNetWorthPerformance($address: String!, $startDate: String!, $endDate: String!) {
-    getSupraNetWorthPerformance(address: $address, startDate: $startDate, endDate: $endDate) {
-      date
-      netWorth
-    }
-  }
-`;
+const MOCK_SUPRA_PRICE = {
+  price: 100,
+  timestamp: "2024-03-15"
+};
 
 
-const GET_SUPRA_PRICE = gql`
-  query GetSupraPrice {
-    getSupraPrice {
-      price
-      timestamp
-    }
-  }
-`;
-
-const GET_WALLET_HOLDINGS = gql`
- query WalletHoldings($address: String!) {
-  walletHoldings(address: $address) {
-    owner
-    cmc_id
-    cg_id
-    cmc_slug
-    name
-    symbol
-    logo
-    amount
-    amountRaw
-    balance
-    contractAddress
-    contractDecimals
-    rate
-    price {
-      price
+const DUNE_WALLET_HOLDINGS = gql`
+  query DuneWalletHoldings($address: String!) {
+    duneWalletHoldings(address: $address) {
+      chain
+      chainId
+      tokenAddress
+      amount
       symbol
-      decimal
-      source
+      name
+      decimals
+      priceUsd
+      valueUsd
+      poolSize
+      lowLiquidity
     }
-    last_24h_price {
-      symbol
-      price
-      timestamp
-      confidence
-      source
-    }
-    avgCost
-    last_transferred_at
-    positionId
-    category
-    sector
-    rank
-    positionType
-    chain
-    is_spam
   }
-}
-`;
-
-const SCRAPED_TABLE_DATA = gql`
-    query GetScrapedTableData($address: String!) {
-        scrapedTableData(address: $address) {
-            name
-            symbol
-            amount
-            price
-            value
-        }
-    }
 `;
 
 
@@ -139,9 +110,12 @@ const SCRAPED_TABLE_DATA = gql`
 const Content = () => {
   const [activeChartType, setActiveChartType] = useState('bar');
   const [timeRange, setTimeRange] = useState("90d");
-  const [totalBalance, setTotalBalance] = useState(0); // State for total balance
+  const [totalBalance, setTotalBalance] = useState(27500);
   const { selectedWalletAddress, wallets } = useWalletContext();
-  const selectedWallet = wallets.find(wallet => wallet.address === selectedWalletAddress);
+  const selectedWallet = wallets?.find(wallet => wallet.address === selectedWalletAddress) || { chain: 'ethereum' };
+
+  // Remove GraphQL queries and use mock data directly
+ 
 
   // const filteredData = chartData.filter((item) => {
 
@@ -165,8 +139,7 @@ const Content = () => {
 
 
 
-  const { loading: holdingsLoading, error: holdingsError, data: holdingsData } = useQuery(
-    selectedWallet?.chain === 'supra' ? SCRAPED_TABLE_DATA : GET_WALLET_HOLDINGS,
+  const { loading: holdingsLoading, error: holdingsError, data: holdingsData } = useQuery(DUNE_WALLET_HOLDINGS,
     {
       variables: { address: selectedWalletAddress },
       skip: !selectedWalletAddress
@@ -175,11 +148,7 @@ const Content = () => {
 
 
   console.log("check holding data", holdingsData);
-  // supra price
-  const { loading: priceLoading, error: priceError, data: priceData } = useQuery(GET_SUPRA_PRICE);
-
-
-
+  
 
   // Calculate end date as today, and start date based on time range
   const endDate = new Date().toISOString().split('T')[0];
@@ -199,80 +168,11 @@ const Content = () => {
 
 
 
-  const {
-    loading: performanceLoading,
-    error: performanceError,
-    data: performanceData
-  } = useQuery(
-    selectedWallet?.chain === 'supra'
-      ? GET_SUPRA_NET_WORTH_PERFORMANCE
-      : GET_NET_WORTH_PERFORMANCE,
-    {
-      variables: {
-        address: selectedWalletAddress,
-        startDate,
-        endDate
-      },
-      skip: !selectedWalletAddress
-    }
-  );
-
-  // fetch data for net worth performance
-  // const { loading: performanceLoading, error: performanceError, data: performanceData } = useQuery(
-  //   GET_NET_WORTH_PERFORMANCE,
-  //   {
-  //     variables: { address: selectedWalletAddress, startDate, endDate },
-  //     skip: !selectedWalletAddress
-  //   }
-  // );
 
 
-
-
-  const netWorthPerformance = selectedWallet?.chain === 'supra'
-    ? performanceData?.getSupraNetWorthPerformance || []
-    : performanceData?.getNetWorthPerformance || [];
 
   console.log("detect chain address", selectedWallet);
 
-  console.log("Check NetWorth Performanace Data", performanceData);
-  console.log("Check NetWorth Performanace", netWorthPerformance);
-
-  useEffect(() => {
-    if (netWorthPerformance.length > 0) {
-      const latestPerformance = netWorthPerformance[netWorthPerformance.length - 1];
-      if (!latestPerformance.error) {
-        setTotalBalance(parseFloat(latestPerformance.netWorth));
-      } else {
-        console.error('Performance data error:', latestPerformance.error);
-        setTotalBalance(0);
-      }
-    } else {
-      setTotalBalance(0);
-    }
-  }, [netWorthPerformance]);
-
-  useEffect(() => {
-    if (holdingsData) {
-      let holdings = selectedWallet?.chain === 'supra' ? holdingsData.scrapedTableData : holdingsData.walletHoldings;
-      if (!holdings || holdings.length === 0) {
-        console.warn('No holdings data available for this address.');
-        setTotalBalance(0);
-        return;
-      }
-
-      let balance = 0;
-      if (selectedWallet.chain === 'supra' && priceData?.getSupraPrice) {
-        balance = calculateTotalBalanceSupra(holdings, priceData.getSupraPrice.price);
-      } else {
-        balance = calculateTotalBalance(holdings);
-      }
-      setTotalBalance(balance);
-    }
-  }, [holdingsData, priceData, selectedWalletAddress]);
-
-  console.log("check selected wallet ", selectedWallet);
-  console.log("check selected wallet chain", selectedWallet?.chain);
 
   const calculateTotalBalance = (holdings) => {
     let total = 0;
@@ -299,30 +199,11 @@ const Content = () => {
 
 
 
-  const calculateTotalBalanceSupra = (holdings, supraPrice) => {
-    let total = 0;
-    for (const holding of holdings) {
-      let amount = parseFloat(holding.amount);
-      if (!isNaN(amount)) {
-        // Use the provided supraPrice for calculation
-        total += amount * supraPrice;
-        console.log(`Calculated value for ${holding.symbol}: ${amount * supraPrice}`);
-      } else {
-        console.warn('Could not parse amount for token:', holding.symbol, { amount: holding.amount });
-      }
-    }
-    console.log('Total balance calculated for Supra:', total);
-    return total;
-  };
-
-  console.log("check balance on content", totalBalance);
-  console.log("check supra price", priceData?.getSupraPrice?.price);
   // console.log("check total balance",total);
 
   // Styles for glass effect
   const glassLayer2Styles = {
     background: 'linear-gradient(to bottom, rgba(129, 99, 138, 0.1), rgba(224, 173, 240, 0.3) )',
-    // background:"transparent",
     opacity: 0.8,
     backdropFilter: 'blur(10px)',
     border: '2px solid rgba(186, 132, 244, 0.2)',
@@ -332,7 +213,7 @@ const Content = () => {
 
   // loading 
 
-  if (holdingsLoading || priceLoading || performanceLoading) {
+  if (holdingsLoading) {
     return (
       <div className="loader-container">
         <div className="loader"></div>
@@ -358,27 +239,19 @@ const Content = () => {
 
   // error
 
-  if (performanceError) {
+  if ( holdingsError) {
     return (
       <Card className="py-2 px-4 bg-transparent" style={glassLayer2Styles}>
         <CardHeader>
           <CardTitle className="text-white/60 italic text-lg">Error</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-white">Error loading net worth performance: {performanceError.message}</p>
+          <p className="text-white">Error loading wallet holdings: {holdingsError.message}</p>
         </CardContent>
       </Card>
     );
   }
 
-
-  if (holdingsError) {
-    return <p>Error loading wallet holdings: {holdingsError.message}</p>;
-  }
-
-  if (priceError) {
-    return <p>Error loading Supra price: {priceError.message}</p>;
-  }
 
 
   return (
@@ -440,13 +313,13 @@ const Content = () => {
       </CardHeader>
       <CardContent className="px-2 pt-2  border-none  bg-transparent">
         <ChartDisplay
-          data={netWorthPerformance}
+          data={MOCK_NET_WORTH_PERFORMANCE}
           chartType={activeChartType === 'bar' ? 'area' : 'pie'}
-          holdingsData={holdingsData}
+          holdingsData={MOCK_HOLDINGS_DATA}
           selectedWallet={selectedWallet}
-          supraPrice={priceData?.getSupraPrice?.price}
+          supraPrice={MOCK_SUPRA_PRICE.price}
         />
-        <Navbar ></Navbar>
+        <Navbar />
       </CardContent>
 
 

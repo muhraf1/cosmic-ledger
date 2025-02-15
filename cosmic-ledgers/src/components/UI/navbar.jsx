@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import VmMenu from "./vmmenu";
-import NftMenu from "./nftmenu";
+import VmMenu from "../Menu/vmmenu";
+import NftMenu from "../Menu/nftmenu";
 import AddressDetails from "./suprascraper";
 
-import TransactionMenu from "./transactionmenu";
-import FusionMenus from "./fusionmenu";
+import TransactionMenu from "../Menu/transactionmenu";
+import FusionMenus from "../Menu/fusionmenu";
 import { useWalletContext } from "./WalletContext";
 
 const Navbar = () => {
