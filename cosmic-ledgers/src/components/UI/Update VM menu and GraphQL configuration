@@ -1,0 +1,14 @@
+Update VM menu and GraphQL configuration for Dune Echo API integration
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch Dune-Echo-API
+# Your branch is up to date with 'origin/Dune-Echo-API'.
+#
+# Changes to be committed:
+#	modified:   cosmic-ledgers/.env
+#	modified:   cosmic-ledgers/src/components/UI/vmmenu.jsx
+#	modified:   cosmic-ledgers/src/resolvers.js
+#	modified:   cosmic-ledgers/src/schema.js
+#
