@@ -49,6 +49,25 @@ const GET_WALLET_HOLDINGS = gql`
 }
 `;
 
+
+const DUNE_WALLET_HOLDINGS = gql`
+  query DuneWalletHoldings($address: String!) {
+    duneWalletHoldings(address: $address) {
+      chain
+      chainId
+      tokenAddress
+      amount
+      symbol
+      name
+      decimals
+      priceUsd
+      valueUsd
+      poolSize
+      lowLiquidity
+    }
+  }
+`;
+
 const SCRAPED_TABLE_DATA = gql`
     query GetScrapedTableData($address: String!) {
         scrapedTableData(address: $address) {
@@ -81,16 +100,37 @@ const VmMenu = () => {
 
 
 
+    // useEffect(() => {
+    //     if (selectedWalletAddress === null) { // 'All Wallet' is selected
+    //         const fetchAllHoldings = async () => {
+    //             const allHoldings = [];
+    //             for (const wallet of wallets) {
+    //                 const { data } = await useQuery(GET_WALLET_HOLDINGS, { variables: { address: wallet.address } });
+    //                 if (data?.walletHoldings) {
+    //                     allHoldings.push(...data.walletHoldings);
+    //                 }
+    //             }
+    //             setAllHoldings(allHoldings);
+    //         };
+    //         fetchAllHoldings();
+    //     }
+    // }, [selectedWalletAddress, wallets]);
+
+
     useEffect(() => {
-        if (selectedWalletAddress === null) { // 'All Wallet' is selected
+        if (selectedWalletAddress === null) {
             const fetchAllHoldings = async () => {
                 const allHoldings = [];
                 for (const wallet of wallets) {
-                    const { data } = await useQuery(GET_WALLET_HOLDINGS, { variables: { address: wallet.address } });
-                    if (data?.walletHoldings) {
-                        allHoldings.push(...data.walletHoldings);
+                    console.log('Fetching holdings for wallet:', wallet.address);
+                    const { data } = await useQuery(DUNE_WALLET_HOLDINGS, { variables: { address: wallet.address } });
+                    console.log('Dune API response:', data);
+                    if (data?.duneWalletHoldings) {
+                        console.log('Dune holdings found:', data.duneWalletHoldings);
+                        allHoldings.push(...data.duneWalletHoldings);
                     }
                 }
+                console.log('All holdings collected:', allHoldings);
                 setAllHoldings(allHoldings);
             };
             fetchAllHoldings();
@@ -103,8 +143,9 @@ const VmMenu = () => {
 
     // Determine which query to use based on the selected wallet's chain
     const selectedWallet = wallets.find(wallet => wallet.address === selectedWalletAddress);
-    const query = selectedWallet?.chain === 'supra' ? SCRAPED_TABLE_DATA : GET_WALLET_HOLDINGS;
+    // const query = selectedWallet?.chain === 'supra' ? SCRAPED_TABLE_DATA : GET_WALLET_HOLDINGS;
 
+    const query = selectedWallet?.chain === 'supra' ? SCRAPED_TABLE_DATA : DUNE_WALLET_HOLDINGS;
 
     const { loading, error, data } = useQuery(query, {
         variables: { address: address },
@@ -255,16 +296,31 @@ const VmMenu = () => {
         }
 
         // Create a new array for sorting to avoid modifying the original data
+        // const sortedHoldings = [...holdings].sort((a, b) => {
+        //     const aValue = selectedWallet?.chain === 'supra'
+        //         ? parseFloat(a.amount.replace(/,/g, '')) * priceData?.getSupraPrice?.price
+        //         : parseFloat(a.amount || 0) * (a.price?.price || 0);
+        //     const bValue = selectedWallet?.chain === 'supra'
+        //         ? parseFloat(b.amount.replace(/,/g, '')) * priceData?.getSupraPrice?.price
+        //         : parseFloat(b.amount || 0) * (b.price?.price || 0);
+
+        //     return bValue - aValue; 
+        // });
+
+
         const sortedHoldings = [...holdings].sort((a, b) => {
             const aValue = selectedWallet?.chain === 'supra'
                 ? parseFloat(a.amount.replace(/,/g, '')) * priceData?.getSupraPrice?.price
-                : parseFloat(a.amount || 0) * (a.price?.price || 0);
+                : parseFloat(a.amount || 0) * parseFloat(a.priceUsd || 0);
             const bValue = selectedWallet?.chain === 'supra'
                 ? parseFloat(b.amount.replace(/,/g, '')) * priceData?.getSupraPrice?.price
-                : parseFloat(b.amount || 0) * (b.price?.price || 0);
+                : parseFloat(b.amount || 0) * parseFloat(b.priceUsd || 0);
 
-            return bValue - aValue; // Sort in descending order
+            return bValue - aValue;
         });
+
+
+
 
         function truncateAddress(address) {
             if (!address) return "N/A";
@@ -357,12 +413,21 @@ const VmMenu = () => {
                                                             <span className="text-xs">{holding.symbol || "N/A"}</span>
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell className="text-xs">
+                                                    {/* <TableCell className="text-xs">
                                                         {selectedWallet?.chain === 'supra' ?
                                                             `$${priceData?.getSupraPrice?.price?.toFixed(5) || "N/A"}` :
                                                             (holding.price?.price ? `$${holding.price.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "N/A")
                                                         }
+                                                    </TableCell> */}
+
+
+                                                    <TableCell className="text-xs">
+                                                        {selectedWallet?.chain === 'supra'
+                                                            ? `$${priceData?.getSupraPrice?.price?.toFixed(5) || "N/A"}`
+                                                            : `$${parseFloat(holding.priceUsd || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                                        }
                                                     </TableCell>
+
                                                     <TableCell className="text-xs">
                                                         {holding.amount ? holding.amount.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : "N/A"}
                                                     </TableCell>
@@ -392,7 +457,7 @@ const VmMenu = () => {
                                                         />
                                                     }
 
-                                                    <DialogDescription className="text-white text-md font-semibold">
+                                                    {/* <DialogDescription className="text-white text-md font-semibold">
                                                         Symbol: {holding.symbol}<br />
                                                         ContractAddress: {holding.contractAddress} <br />
                                                         Price: ${selectedWallet?.chain === 'supra' ? priceData?.getSupraPrice?.price?.toFixed(5) : holding.price?.price || "N/A"}<br />
@@ -407,6 +472,21 @@ const VmMenu = () => {
                                                             minimumFractionDigits: 2,
                                                             maximumFractionDigits: 3
                                                         })}` : "N/A"}
+                                                    </DialogDescription> */}
+
+
+                                                    <DialogDescription className="text-white text-md font-semibold">
+                                                        Symbol: {holding.symbol}<br />
+                                                        ContractAddress: {holding.tokenAddress} <br />
+                                                        Chain: {holding.chain} <br />
+                                                        Price: ${selectedWallet?.chain === 'supra'
+                                                            ? priceData?.getSupraPrice?.price?.toFixed(5)
+                                                            : parseFloat(holding.priceUsd || 0).toFixed(5) || "N/A"}<br />
+                                                        Amount: {holding.amount || "N/A"}<br />
+                                                        USD Value: ${parseFloat(holding.valueUsd || 0).toLocaleString('en-US', {
+                                                            minimumFractionDigits: 2,
+                                                            maximumFractionDigits: 3
+                                                        })}
                                                     </DialogDescription>
                                                 </DialogHeader>
                                             </DialogContent>

@@ -147,6 +147,24 @@ import { gql } from 'apollo-server-express';
     getPriceHistoryDialog(trading_pair: String, startDate:String , endDate:String, interval:String): [PriceData!]!
   }
 
+type DuneBalance {
+  chain: String
+  chainId: Int
+  tokenAddress: String
+  amount: String
+  symbol: String
+  name: String
+  decimals: Int
+  priceUsd: String
+  valueUsd: String
+  poolSize: String
+  lowLiquidity: Boolean
+}
+
+type Query {
+  duneWalletHoldings(address: String!): [DuneBalance]
+}
+
 `;
 
 export { typeDefs };
