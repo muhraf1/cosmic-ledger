@@ -110,7 +110,7 @@ const DUNE_WALLET_HOLDINGS = gql`
 const Content = () => {
   const [activeChartType, setActiveChartType] = useState('bar');
   const [timeRange, setTimeRange] = useState("90d");
-  const [totalBalance, setTotalBalance] = useState(27500);
+  const [totalBalance, setTotalBalance] = useState(0);
   const { selectedWalletAddress, wallets } = useWalletContext();
   const selectedWallet = wallets?.find(wallet => wallet.address === selectedWalletAddress) || { chain: 'ethereum' };
 
@@ -146,6 +146,15 @@ const Content = () => {
     }
   );
 
+  // Calculate total balance from Dune holdings
+  useEffect(() => {
+    if (holdingsData?.duneWalletHoldings) {
+      const total = holdingsData.duneWalletHoldings.reduce((sum, holding) => {
+        return sum + Number(parseFloat(holding.valueUsd || 0));
+      }, 0);
+      setTotalBalance(total);
+    }
+  }, [holdingsData]);
 
   console.log("check holding data", holdingsData);
   
@@ -312,10 +321,10 @@ const Content = () => {
         </div>
       </CardHeader>
       <CardContent className="px-2 pt-2  border-none  bg-transparent">
-        <ChartDisplay
+      <ChartDisplay
           data={MOCK_NET_WORTH_PERFORMANCE}
           chartType={activeChartType === 'bar' ? 'area' : 'pie'}
-          holdingsData={MOCK_HOLDINGS_DATA}
+          holdingsData={{ walletHoldings: holdingsData?.duneWalletHoldings || [] }}
           selectedWallet={selectedWallet}
           supraPrice={MOCK_SUPRA_PRICE.price}
         />

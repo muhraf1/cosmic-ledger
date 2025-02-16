@@ -3,7 +3,7 @@ import { AreaChart, Area, CartesianGrid, XAxis, PieChart, Pie, Cell, Legend } fr
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-const ChartDisplay = ({ data, chartType, holdingsData, selectedWallet, supraPrice }) => {
+const ChartDisplay = ({ data, chartType, holdingsData, selectedWallet }) => {
   // Error checking for required props
   if (!data && chartType !== 'pie') {
     return (
@@ -25,36 +25,23 @@ const ChartDisplay = ({ data, chartType, holdingsData, selectedWallet, supraPric
     );
   }
 
-  const processSupraHoldings = (scrapedData, currentPrice) => {
-    try {
-      if (!scrapedData || !currentPrice) return [];
-      
-      return scrapedData
-        .filter(holding => holding && holding.symbol && holding.amount) // Validate data
-        .map(holding => ({
-          name: holding.symbol,
-          value: parseFloat(holding.amount) * parseFloat(currentPrice)
-        }))
-        .filter(holding => !isNaN(holding.value) && holding.value > 0);
-    } catch (error) {
-      console.error('Error processing Supra holdings:', error);
-      return [];
-    }
-  };
-
   const processStandardHoldings = (holdings) => {
     try {
       if (!holdings) return [];
       
       return holdings
-        .filter(holding => holding && holding.symbol && holding.amount) // Validate data
+        .filter(holding => holding && holding.symbol && holding.valueUsd)
         .map(holding => ({
           name: holding.symbol,
-          value: parseFloat(holding.amount) * parseFloat(holding.price?.price || 0)
+          value: Number(parseFloat(holding.valueUsd || 0)),
+          displayValue: `$${Number(parseFloat(holding.valueUsd || 0)).toLocaleString('en-US', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+          })}`
         }))
         .filter(holding => !isNaN(holding.value) && holding.value > 0);
     } catch (error) {
-      console.error('Error processing standard holdings:', error);
+      console.error('Error processing holdings:', error);
       return [];
     }
   };
@@ -63,14 +50,7 @@ const ChartDisplay = ({ data, chartType, holdingsData, selectedWallet, supraPric
     let processedHoldings = [];
     
     try {
-      if (selectedWallet?.chain === 'supra') {
-        processedHoldings = processSupraHoldings(
-          holdingsData?.scrapedTableData,
-          supraPrice
-        );
-      } else {
-        processedHoldings = processStandardHoldings(holdingsData?.walletHoldings);
-      }
+      processedHoldings = processStandardHoldings(holdingsData?.walletHoldings);
 
       if (processedHoldings.length === 0) {
         return (
@@ -83,10 +63,17 @@ const ChartDisplay = ({ data, chartType, holdingsData, selectedWallet, supraPric
         );
       }
 
+      // Calculate total value for percentage
+      const totalValue = processedHoldings.reduce((sum, holding) => sum + holding.value, 0);
+
       // Sort by value and take top 5 holdings
       const topHoldings = processedHoldings
         .sort((a, b) => b.value - a.value)
-        .slice(0, 5);
+        .slice(0, 5)
+        .map(holding => ({
+          ...holding,
+          percentage: ((holding.value / totalValue) * 100).toFixed(2)
+        }));
 
       // Calculate "Others" if there are more holdings
       if (processedHoldings.length > 5) {
@@ -96,7 +83,8 @@ const ChartDisplay = ({ data, chartType, holdingsData, selectedWallet, supraPric
         
         topHoldings.push({
           name: 'Others',
-          value: othersValue
+          value: othersValue,
+          percentage: ((othersValue / totalValue) * 100).toFixed(2)
         });
       }
 
@@ -130,22 +118,20 @@ const ChartDisplay = ({ data, chartType, holdingsData, selectedWallet, supraPric
               wrapperStyle={{
                 paddingLeft: '1px'
               }}
-              formatter={(value) => (
-                <span className="text-[#DCCAE6] text-xs">{value}</span>
+              formatter={(value, entry) => (
+                <span className="text-[#DCCAE6] text-xs">
+                  {`${value} ($${entry.payload.value.toLocaleString()})`}
+                </span>
               )}
             />
-            <ChartTooltip
+                       <ChartTooltip
               content={
                 <ChartTooltipContent
-                  labelFormatter={(value) => value}
-                  valueFormatter={(value) => 
-                    value.toLocaleString('en-US', {
-                      style: 'currency',
-                      currency: 'USD',
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 2
-                    })
-                  }
+                  labelFormatter={(value) => `${value} (${topHoldings.find(h => h.name === value)?.percentage}%)`}
+                  valueFormatter={(value) => `${Number(value).toLocaleString('en-US', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2
+                  })}`}
                 />
               }
             />
@@ -166,15 +152,7 @@ const ChartDisplay = ({ data, chartType, holdingsData, selectedWallet, supraPric
 
   // Area chart for net worth over time
   try {
-    const processedData = selectedWallet?.chain === 'supra' 
-      ? data
-          .filter(item => item && item.netWorth) // Validate data
-          .map(item => ({
-            ...item,
-            netWorth: parseFloat(item.netWorth) * (supraPrice || 0)
-          }))
-          .filter(item => !isNaN(item.netWorth)) // Remove invalid calculations
-      : data;
+    const processedData = data;
 
     if (processedData.length === 0) {
       return (

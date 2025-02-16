@@ -55,6 +55,47 @@
           return [];
         }
       },
+      
+      duneSolanaWalletHoldings: async (_, { address }) => {
+        try {
+          const response = await axios.get(`https://api.dune.com/api/echo/beta/balances/svm/${address}`, {
+            headers: {
+              'X-Dune-Api-Key': process.env.DUNE_API_KEY
+            }
+          });
+
+          if (!response.data || !response.data.balances) {
+            return [];
+          }
+
+          // Transform the data to match our schema
+          return response.data.balances.map(balance => ({
+            chain: balance.chain,
+            chainId: balance.chain_id || null,
+            tokenAddress: balance.address|| null,
+            amount: balance.amount,
+            symbol: balance.symbol,
+            name: balance.name || balance.symbol,
+            decimals: balance.decimals,
+            priceUsd: balance.price_usd ? Number(balance.price_usd) : 0,
+            valueUsd: balance.value_usd ? Number(balance.value_usd) : 0,
+            tokenMetadata: balance.token_metadata ? {
+              logo: balance.token_metadata.logo,
+              url: balance.token_metadata.url
+            } : null
+          }));
+
+        } catch (error) {
+          console.error('Failed to fetch Solana data from Dune Echo API:', error);
+          if (error.response) {
+            console.error('Error response:', {
+              status: error.response.status,
+              data: error.response.data
+            });
+          }
+          return [];
+        }
+      }
     }
 
 
